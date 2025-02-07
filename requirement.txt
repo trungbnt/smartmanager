@@ -1,0 +1,30 @@
+Hãy tạo 1 website quản lý công việc cho công ty cẩu tải theo như yêu cầu bên dưới
+
+	Số hóa công tác quản lý & vận hành: Dành cho DN kinh doanh dịch vụ Cẩu - Cẩu tải		
+STT	ĐỐI TƯỢNG	MÔ TẢ CÔNG VIỆC	GHI CHÚ
+I	Khách hàng (KH)	"- Dễ dàng tìm hiểu, tiếp cận DN: Profile cty
+- Dễ dàng gửi yêu cầu công việc: Báo giá, khảo sát….
+- Có thể phản hồi những ý kiến đến DN khi có vấn đề cần trao đổi"	
+II	Công ty		
+1	BP Kinh doanh	"- Tiếp nhận thông tin từ KH: KH cũ/mới, DN/cá nhân
+- Xem xét yêu cầu công việc: mức độ đáp ứng, lịch trình kế hoạch thi công: Công việc cụ thể là gì, đơn giản/phức tạp. Làm theo ca/tháng/theo công việc cụ thể.
+- Tương tác với đội ngũ kỹ thuật để lập phương án - tính toán chi phí trong cơ cấu giá - gửi báo giá đến KH."	- Tích hợp mẫu Báo giá: chỉ cần nhập số liệu là có thể cung cấp ngay cho KH, đồng thời các BP khác có thể theo dõi (mức độ theo dõi thông tin - sẽ được giới hạn quyền xem). Ví dụ: Công việc j? Ở đâu? Thời gian khi nào? Làm mất bao lâu? Cơ cấu trong BG?
+2	BP Kĩ thuật - đội xe	"- Tiếp nhận thông tin - đi khảo sát, đánh giá công việc
+- tương tác với KD để lập phương án triển khai, tính chi phí cần thiết - gửi báo giá KD - Gửi KH
+- Lập được kế hoạch & theo dõi được lịch trình triển khai công việc với KH
+- Lập được kế hoạch & theo dõi được lịch trình: đăng kiểm xe, sửa chữa bảo dưỡng xe & thiết bị "	- Tích hợp mẫu Cơ cấu giá thành: Nhập liệu các thông tin công việc, chi phí vật tư, chi phí nhân công, các phí khác….Link đến các BP khác để theo dõi (mức độ theo dõi thông tin - sẽ được giới hạn)
+3	BP Kế toán - Tổng hợp	"- Theo dõi công việc: Báo giá - Hợp đồng thi công, Chi phí đầu vào, Thu hồi công nợ.
+- Tính lương hằng tháng
+- Chi trả % phúc lợi: Đối tác, Nhân viên.
+- Báo cáo thu -chi
+- Thống kê các hóa đơn, chứng từ, báo cáo thuế, Bảo hiểm"	Link với các phần mềm kế toán, khai báo thuế, bảo hiểm
+4	BGĐ	"- Nắm toàn bộ thông tin, tình trạng từ các BP.
+- Theo dõi từng BG / Hợp đồng/Quản lý Thông tin KH.
+- Thống kê được khối lượng công việc trong Tháng/Năm:
+- Theo dõi được các báo cáo, các kế hoạch.
+- Từ những dữ liệu nhập vào có thể đưa ra thống kê, dự báo: Ví dụ:
+   + Số lượng thông tin KH đưa về - BG gửi đi - BG chuyển hóa thành hợp đồng thi công.
+   + Công việc nào đang được gửi BG nhiều 
+   + Doanh thu đến từ việc nào? KH nào nhiều? tập trung khu vực nào
+   + Chi phí: đang chi cho việc j, việc j nhiều nhất
+- Theo dõi các hóa đơn, chứng từ, báo cáo thuế."	Tích hợp Chữ ký số, hợp đồng số….
