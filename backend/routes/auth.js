@@ -1,14 +1,50 @@
 const express = require('express');
 const router = express.Router();
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
 const authController = require('../controllers/authController');
 const customerController = require('../controllers/customerController');
 const jobRequestController = require('../controllers/jobRequestController');
-const quoteController = require('../controllers/quoteController');
+const { createQuote, getQuotes, updateQuote, deleteQuote, updateQuoteStatus } = require('../controllers/quoteController');
 const scheduleController = require('../controllers/scheduleController');
 const invoiceController = require('../controllers/invoiceController');
 const reportController = require('../controllers/reportController');
 const User = require('../models/User');
 const authMiddleware = require('../middleware/authMiddleware');
+const auth = require('../middleware/auth');
+
+// Configure multer for file uploads
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        const uploadDir = path.join(__dirname, '../uploads');
+        if (!fs.existsSync(uploadDir)) {
+            fs.mkdirSync(uploadDir, { recursive: true });
+        }
+        cb(null, uploadDir);
+    },
+    filename: (req, file, cb) => {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, 'quote-' + uniqueSuffix + path.extname(file.originalname));
+    }
+});
+
+const upload = multer({
+    storage: storage,
+    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+    fileFilter: (req, file, cb) => {
+        const allowedTypes = [
+            'application/pdf',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        ];
+        if (allowedTypes.includes(file.mimetype)) {
+            cb(null, true);
+        } else {
+            cb(new Error('Invalid file type'), false);
+        }
+    }
+});
 
 // Đăng ký người dùng mới
 router.post('/register', authController.register);
@@ -40,10 +76,11 @@ router.put('/job-requests/:id', authMiddleware(['admin', 'account']), jobRequest
 router.delete('/job-requests/:id', authMiddleware(['admin']), jobRequestController.deleteJobRequest);
 
 // Route cho báo giá
-router.get('/quotes', authMiddleware(['admin', 'account', 'sales']), quoteController.getQuotes);
-router.post('/quotes', authMiddleware(['admin', 'account']), quoteController.addQuote);
-router.put('/quotes/:id', authMiddleware(['admin', 'account']), quoteController.updateQuote);
-router.delete('/quotes/:id', authMiddleware(['admin']), quoteController.deleteQuote);
+router.post('/quotes', auth(['admin', 'account', 'sales']), upload.single('file'), createQuote);
+router.get('/quotes', auth(['admin', 'sales']), getQuotes);
+router.put('/quotes/:id', auth(['admin', 'sales']), upload.single('file'), updateQuote);
+router.delete('/quotes/:id', auth(['admin', 'sales']), deleteQuote);
+router.patch('/quotes/:id/status', auth(['admin']), updateQuoteStatus);
 
 // Route cho lịch trình
 router.get('/schedules', authMiddleware(['admin', 'account', 'sales']), scheduleController.getSchedules);
@@ -63,4 +100,4 @@ router.post('/reports', authMiddleware(['admin', 'account']), reportController.a
 router.put('/reports/:id', authMiddleware(['admin', 'account']), reportController.updateReport);
 router.delete('/reports/:id', authMiddleware(['admin']), reportController.deleteReport);
 
-module.exports = router; 
+module.exports = router;

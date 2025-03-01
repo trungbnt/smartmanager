@@ -14,7 +14,7 @@ const PORT = process.env.PORT || 5000;
 // Create uploads directory if it doesn't exist
 const uploadDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir);
+    fs.mkdirSync(uploadDir, { recursive: true });
 }
 
 // Configure multer storage
@@ -59,20 +59,28 @@ mongoose.connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true })
 // Middleware
 app.use(bodyParser.json());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 app.use('/uploads', express.static(uploadDir));
 app.use('/api', routes);
 app.use('/api/auth', authRoutes);
 
+// Add this after your middleware setup and before your routes
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 // Error handling middleware
 app.use((err, req, res, next) => {
+    console.error(err.stack);
     if (err instanceof multer.MulterError) {
         return res.status(400).json({ 
             message: 'File upload error', 
             error: err.message 
         });
     }
-    next(err);
+    res.status(500).json({ 
+        message: 'Internal server error',
+        error: err.message
+    });
 });
 
 app.listen(PORT, () => {

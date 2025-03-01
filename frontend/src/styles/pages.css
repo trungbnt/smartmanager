@@ -510,15 +510,51 @@
 }
 
 .file-input {
-    margin: 10px 0;
+    width: 100%;
+    padding: 8px;
+    margin-top: 4px;
 }
 
 .file-preview {
-    margin-top: 10px;
-    padding: 10px;
+    margin-top: 8px;
+    padding: 8px 12px;
     background-color: #f8f9fa;
-    border-radius: 4px;
     border: 1px solid #dee2e6;
+    border-radius: 4px;
+    font-size: 0.9em;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.file-info {
+    flex: 1;
+}
+
+.file-info p {
+    margin: 0;
+}
+
+.file-info small {
+    color: #6c757d;
+    margin-left: 8px;
+}
+
+.remove-file-icon {
+    color: #dc3545;
+    cursor: pointer;
+    font-size: 1.1em;
+    padding: 4px;
+    transition: color 0.2s ease;
+}
+
+.remove-file-icon:hover {
+    color: #c82333;
+}
+
+.file-preview small {
+    color: #6c757d;
+    margin-left: 8px;
 }
 
 .ck-editor__editable {

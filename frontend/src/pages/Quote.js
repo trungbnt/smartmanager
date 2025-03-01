@@ -73,7 +73,36 @@ function Quote() {
 
     const handleFileChange = (e) => {
         const file = e.target.files[0];
-        setFormData(prev => ({...prev, file}));
+        if (file) {
+            // Define allowed file types
+            const allowedTypes = [
+                'application/pdf',
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            ];
+            
+            if (!allowedTypes.includes(file.type)) {
+                addNotification('Chỉ chấp nhận file PDF, DOCX hoặc XLSX', 'error');
+                e.target.value = ''; // Clear the file input
+                return;
+            }
+            
+            if (file.size > 5 * 1024 * 1024) {
+                addNotification('File không được vượt quá 5MB', 'error');
+                e.target.value = ''; // Clear the file input
+                return;
+            }
+            setFormData(prev => ({...prev, file}));
+        }
+    };
+
+    const handleRemoveFile = () => {
+        setFormData(prev => ({...prev, file: null}));
+        // Reset the file input
+        const fileInput = document.querySelector('input[type="file"]');
+        if (fileInput) {
+            fileInput.value = '';
+        }
     };
 
     const handleSubmit = async (e) => {
@@ -88,82 +117,65 @@ function Quote() {
                 return;
             }
 
-            // Format amount to remove any commas and ensure it's a number
+            // Format amount to number
             const cleanAmount = parseFloat(formData.amount.replace(/[^\d.]/g, ''));
             if (isNaN(cleanAmount)) {
                 addNotification('Số tiền không hợp lệ', 'error');
                 return;
             }
 
-            // Create base quote data
-            const quoteData = {
-                jobRequestId: formData.jobRequestId,
-                amount: cleanAmount,
-                details: formData.details,
-                status: 'pending' // Add default status
-            };
+            const formDataToSend = new FormData();
+            formDataToSend.append('jobRequestId', formData.jobRequestId);
+            formDataToSend.append('amount', cleanAmount);
+            formDataToSend.append('details', formData.details);
 
-            // Create FormData instance if there's a file
             if (formData.file) {
-                const formDataToSend = new FormData();
-                // Add the file
+                const allowedTypes = [
+                    'application/pdf',
+                    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+                ];
+                
+                if (!allowedTypes.includes(formData.file.type)) {
+                    addNotification('Chỉ chấp nhận file PDF, DOCX hoặc XLSX', 'error');
+                    return;
+                }
+
+                if (formData.file.size > 5 * 1024 * 1024) {
+                    addNotification('File không được vượt quá 5MB', 'error');
+                    return;
+                }
+
                 formDataToSend.append('file', formData.file);
-                // Add other data as fields
-                Object.keys(quoteData).forEach(key => {
-                    formDataToSend.append(key, quoteData[key]);
+            }
+
+            const response = await axios({
+                method: 'post',
+                url: 'http://localhost:5000/api/auth/quotes',
+                data: formDataToSend,
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
+
+            if (response.data) {
+                setFormData({
+                    jobRequestId: '',
+                    amount: '',
+                    details: '',
+                    file: null
                 });
-
-                const response = await axios.post(
-                    'http://localhost:5000/api/auth/quotes',
-                    formDataToSend,
-                    {
-                        headers: {
-                            Authorization: `Bearer ${token}`,
-                            'Content-Type': 'multipart/form-data'
-                        }
-                    }
-                );
-
-                if (response.data) {
-                    handleSuccess();
-                }
-            } else {
-                // If no file, send JSON directly
-                const response = await axios.post(
-                    'http://localhost:5000/api/auth/quotes',
-                    quoteData,
-                    {
-                        headers: {
-                            Authorization: `Bearer ${token}`,
-                            'Content-Type': 'application/json'
-                        }
-                    }
-                );
-
-                if (response.data) {
-                    handleSuccess();
-                }
+                addNotification('Tạo báo giá thành công!');
+                await fetchQuotes();
             }
         } catch (err) {
-            console.error('Error creating quote:', err);
-            console.error('Error details:', err.response?.data);
+            console.error('Error creating quote:', err.response?.data || err.message);
             const errorMessage = err.response?.data?.message || 'Không thể tạo báo giá';
             addNotification(errorMessage, 'error');
         } finally {
             setLoading(false);
         }
-    };
-
-    // Add this helper function to handle successful submission
-    const handleSuccess = () => {
-        setFormData({
-            jobRequestId: '',
-            amount: '',
-            details: '',
-            file: null
-        });
-        addNotification('Tạo báo giá thành công!');
-        fetchQuotes();
     };
 
     const handleEdit = (quote) => {
@@ -312,15 +324,24 @@ function Quote() {
                 </div>
 
                 <div className="form-group">
-                    <label>Tập tin đính kèm:</label>
+                    <label>Tập tin đính kèm (PDF, DOCX, XLSX):</label>
                     <input 
                         type="file"
+                        accept=".pdf,.docx,.xlsx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                         onChange={handleFileChange}
                         className="file-input"
                     />
                     {formData.file && (
                         <div className="file-preview">
-                            <p>File đã chọn: {formData.file.name}</p>
+                            <div className="file-info">
+                                <p>File đã chọn: {formData.file.name}</p>
+                                <small>({(formData.file.size / (1024 * 1024)).toFixed(2)} MB)</small>
+                            </div>
+                            <FaTimes
+                                className="remove-file-icon"
+                                onClick={handleRemoveFile}
+                                title="Xóa file"
+                            />
                         </div>
                     )}
                 </div>
