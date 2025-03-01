@@ -1,5 +1,5 @@
 import React from 'react';
-import './Home.css'; // Tạo tệp CSS riêng cho Home
+import '../styles/pages.css';
 
 function Home() {
     return (

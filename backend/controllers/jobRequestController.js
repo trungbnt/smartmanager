@@ -1,7 +1,7 @@
 const JobRequest = require('../models/JobRequest');
 
 // Tạo yêu cầu công việc mới
-exports.createJobRequest = async (req, res) => {
+const createJobRequest = async (req, res) => {
     const newJobRequest = new JobRequest(req.body);
     try {
         await newJobRequest.save();
@@ -12,7 +12,7 @@ exports.createJobRequest = async (req, res) => {
 };
 
 // Lấy danh sách yêu cầu công việc
-exports.getJobRequests = async (req, res) => {
+const getJobRequests = async (req, res) => {
     try {
         const jobRequests = await JobRequest.find();
         res.json(jobRequests);
@@ -22,12 +22,12 @@ exports.getJobRequests = async (req, res) => {
 };
 
 // Thêm yêu cầu công việc
-exports.addJobRequest = async (req, res) => {
+const addJobRequest = async (req, res) => {
     const newJobRequest = new JobRequest({
-        customerId: req.user.id, // Giả sử bạn muốn lưu ID của người dùng
+        customerId: req.user.id,
         title: req.body.title,
         description: req.body.description,
-        // Thêm các trường khác nếu cần
+        requestId: req.body.requestId // Add this line for the new requestId field
     });
 
     try {
@@ -39,18 +39,38 @@ exports.addJobRequest = async (req, res) => {
 };
 
 // Cập nhật yêu cầu công việc
-exports.updateJobRequest = async (req, res) => {
-    const { id } = req.params;
+const updateJobRequest = async (req, res) => {
     try {
-        const updatedJobRequest = await JobRequest.findByIdAndUpdate(id, req.body, { new: true });
-        res.json(updatedJobRequest);
+        const { id } = req.params;
+        const { title, description, status } = req.body;
+        
+        const jobRequest = await JobRequest.findById(id);
+        
+        if (!jobRequest) {
+            return res.status(404).json({ message: 'Không tìm thấy yêu cầu công việc' });
+        }
+
+        // Kiểm tra quyền cập nhật
+        const userRole = req.user.role;
+        if (userRole !== 'admin' && userRole !== 'account' && req.user.id !== jobRequest.customerId.toString()) {
+            return res.status(403).json({ message: 'Không có quyền cập nhật' });
+        }
+
+        // Cập nhật thông tin
+        jobRequest.title = title;
+        jobRequest.description = description;
+        jobRequest.status = status;
+
+        await jobRequest.save();
+        res.json(jobRequest);
     } catch (error) {
-        res.status(400).json({ message: 'Error updating job request' });
+        console.error('Error updating job request:', error);
+        res.status(500).json({ message: 'Lỗi server' });
     }
 };
 
 // Xóa yêu cầu công việc
-exports.deleteJobRequest = async (req, res) => {
+const deleteJobRequest = async (req, res) => {
     const { id } = req.params;
     try {
         await JobRequest.findByIdAndDelete(id);
@@ -58,4 +78,13 @@ exports.deleteJobRequest = async (req, res) => {
     } catch (error) {
         res.status(400).json({ message: 'Error deleting job request' });
     }
-}; 
+};
+
+// Export all functions
+module.exports = {
+    createJobRequest,
+    getJobRequests,
+    addJobRequest,
+    updateJobRequest,
+    deleteJobRequest
+};
