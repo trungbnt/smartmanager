@@ -16,10 +16,43 @@ exports.createInvoice = async (req, res) => {
 // Lấy danh sách hóa đơn
 exports.getInvoices = async (req, res) => {
     try {
-        const invoices = await Invoice.find().populate('quoteId');
-        res.status(200).send(invoices);
+        const invoices = await Invoice.find();
+        res.json(invoices);
     } catch (error) {
-        res.status(500).send(error);
+        res.status(500).json({ message: 'Error fetching invoices' });
+    }
+};
+
+// Thêm hóa đơn
+exports.addInvoice = async (req, res) => {
+    const newInvoice = new Invoice(req.body);
+    try {
+        await newInvoice.save();
+        res.status(201).json(newInvoice);
+    } catch (error) {
+        res.status(400).json({ message: 'Error adding invoice' });
+    }
+};
+
+// Cập nhật hóa đơn
+exports.updateInvoice = async (req, res) => {
+    const { id } = req.params;
+    try {
+        const updatedInvoice = await Invoice.findByIdAndUpdate(id, req.body, { new: true });
+        res.json(updatedInvoice);
+    } catch (error) {
+        res.status(400).json({ message: 'Error updating invoice' });
+    }
+};
+
+// Xóa hóa đơn
+exports.deleteInvoice = async (req, res) => {
+    const { id } = req.params;
+    try {
+        await Invoice.findByIdAndDelete(id);
+        res.status(204).send();
+    } catch (error) {
+        res.status(400).json({ message: 'Error deleting invoice' });
     }
 };
 

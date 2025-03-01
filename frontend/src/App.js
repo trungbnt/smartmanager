@@ -12,7 +12,7 @@ import Invoice from './pages/Invoice';
 import Report from './pages/Report';
 // Import thêm các trang khác
 
-function App() {
+const App = () => {
     const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
     const [userRole, setUserRole] = useState(localStorage.getItem('userRole'));
     const [username, setUsername] = useState(localStorage.getItem('username'));
@@ -38,6 +38,11 @@ function App() {
         window.location.href = '/'; // Quay về trang chủ
     };
 
+    const handleLogin = (username, role) => {
+        setUsername(username);
+        setUserRole(role);
+    };
+
     return (
         <Router>
             <div>
@@ -48,19 +53,22 @@ function App() {
                             <li><Link to="/">Home</Link></li>
                             {userRole === 'customer' && (
                                 <>
-                                    <li><Link to="/customers">Customers</Link></li>
                                     <li><Link to="/job-requests">Job Requests</Link></li>
                                     <li><Link to="/contact">Contact</Link></li>
                                 </>
                             )}
                             {userRole === 'sales' || userRole === 'engineering' ? (
                                 <>
+                                    <li><Link to="/customers">Customers</Link></li>
+                                    <li><Link to="/job-requests">Job Requests</Link></li>
                                     <li><Link to="/quotes">Quotes</Link></li>
                                     <li><Link to="/schedules">Schedules</Link></li>
                                 </>
                             ) : null}
                             {userRole === 'account' ? (
                                 <>
+                                    <li><Link to="/customers">Customers</Link></li>
+                                    <li><Link to="/job-requests">Job Requests</Link></li>
                                     <li><Link to="/invoices">Invoices</Link></li>
                                     <li><Link to="/reports">Reports</Link></li>
                                 </>
@@ -77,9 +85,9 @@ function App() {
                             )}
                             {username ? (
                                 <>
-                                    <li style={{ float: 'right' }}>Xin chào, {username}!</li>
+                                    <li className="welcome-message">Xin chào, {username}!</li>
                                     <li style={{ float: 'right' }}>
-                                        <button onClick={() => setShowLogoutConfirm(true)}>Đăng xuất</button>
+                                        <button className="logout-button" onClick={() => setShowLogoutConfirm(true)}>Đăng xuất</button>
                                     </li>
                                 </>
                             ) : (
@@ -97,7 +105,9 @@ function App() {
                         <Route path="/contact" component={Contact} />
                         <Route path="/customers" component={Customer} />
                         <Route path="/register" component={Register} />
-                        <Route path="/login" component={Login} />
+                        <Route path="/login">
+                            <Login onLogin={handleLogin} />
+                        </Route>
                         {userRole === 'customer' && <Route path="/job-requests" component={JobRequest} />}
                         {(userRole === 'sales' || userRole === 'engineering') && <Route path="/quotes" component={Quote} />}
                         {(userRole === 'sales' || userRole === 'engineering') && <Route path="/schedules" component={Schedule} />}
@@ -121,6 +131,6 @@ function App() {
             </div>
         </Router>
     );
-}
+};
 
 export default App; 

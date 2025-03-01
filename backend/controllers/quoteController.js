@@ -16,10 +16,43 @@ exports.createQuote = async (req, res) => {
 // Lấy danh sách báo giá
 exports.getQuotes = async (req, res) => {
     try {
-        const quotes = await Quote.find().populate('jobRequestId');
-        res.status(200).send(quotes);
+        const quotes = await Quote.find();
+        res.json(quotes);
     } catch (error) {
-        res.status(500).send(error);
+        res.status(500).json({ message: 'Error fetching quotes' });
+    }
+};
+
+// Thêm báo giá
+exports.addQuote = async (req, res) => {
+    const newQuote = new Quote(req.body);
+    try {
+        await newQuote.save();
+        res.status(201).json(newQuote);
+    } catch (error) {
+        res.status(400).json({ message: 'Error adding quote' });
+    }
+};
+
+// Cập nhật báo giá
+exports.updateQuote = async (req, res) => {
+    const { id } = req.params;
+    try {
+        const updatedQuote = await Quote.findByIdAndUpdate(id, req.body, { new: true });
+        res.json(updatedQuote);
+    } catch (error) {
+        res.status(400).json({ message: 'Error updating quote' });
+    }
+};
+
+// Xóa báo giá
+exports.deleteQuote = async (req, res) => {
+    const { id } = req.params;
+    try {
+        await Quote.findByIdAndDelete(id);
+        res.status(204).send();
+    } catch (error) {
+        res.status(400).json({ message: 'Error deleting quote' });
     }
 };
 

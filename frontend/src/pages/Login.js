@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { useHistory } from 'react-router-dom';
 
-function Login() {
+function Login({ onLogin }) {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [message, setMessage] = useState('');
@@ -12,11 +12,19 @@ function Login() {
         e.preventDefault();
         try {
             const response = await axios.post('http://localhost:5000/api/auth/login', { username, password });
-            const { token, role } = response.data; // Giả sử bạn nhận được vai trò từ server
-            localStorage.setItem('userRole', role); // Lưu vai trò vào localStorage
-            localStorage.setItem('username', username); // Lưu tên người dùng vào localStorage
-            localStorage.setItem('token', token); // Lưu token vào localStorage
-            setMessage('Đăng nhập thành công!'); // Thông báo thành công
+            const { token, role } = response.data; // Nhận token và vai trò từ server
+            console.log('Role:', role); // Log vai trò để kiểm tra
+            console.log('Generated Token:', token); // Log token để kiểm tra
+
+            // Lưu thông tin vào localStorage
+            localStorage.setItem('userRole', role);
+            localStorage.setItem('username', username);
+            localStorage.setItem('token', token);
+            setMessage('Đăng nhập thành công!');
+
+            // Gọi callback để cập nhật trạng thái trong App.js
+            onLogin(username, role);
+
             // Chuyển hướng về trang chủ
             history.push('/');
         } catch (error) {

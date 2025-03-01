@@ -10,7 +10,7 @@ function Customer() {
 
     useEffect(() => {
         const fetchCustomers = async () => {
-            const response = await axios.get('/api/customers');
+            const response = await axios.get('http://localhost:5000/api/customers');
             setCustomers(response.data);
         };
         fetchCustomers();
@@ -18,13 +18,13 @@ function Customer() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        await axios.post('/api/customers', { name, email, phone, address });
+        await axios.post('http://localhost:5000/api/customers', { name, email, phone, address });
         setName('');
         setEmail('');
         setPhone('');
         setAddress('');
         // Cập nhật lại danh sách khách hàng
-        const response = await axios.get('/api/customers');
+        const response = await axios.get('http://localhost:5000/api/customers');
         setCustomers(response.data);
     };
 

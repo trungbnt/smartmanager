@@ -101,3 +101,32 @@ nav ul li a:hover {
 .logout-confirm button {
     margin: 5px;
 }
+
+/* Thêm kiểu cho nút Đăng xuất */
+.logout-button {
+    background-color: #4CAF50; /* Màu nền */
+    color: white; /* Màu chữ */
+    border: none; /* Không có viền */
+    padding: 10px 15px; /* Khoảng cách bên trong */
+    text-align: center; /* Căn giữa */
+    text-decoration: none; /* Không có gạch chân */
+    display: inline-block; /* Hiển thị như một khối */
+    font-size: 16px; /* Kích thước chữ */
+    margin: 4px 2px; /* Khoảng cách giữa các nút */
+    cursor: pointer; /* Con trỏ chuột khi di chuột qua */
+    border-radius: 5px; /* Bo góc */
+    transition: background-color 0.3s; /* Hiệu ứng chuyển màu */
+}
+
+.logout-button:hover {
+    background-color: #45a049; /* Màu nền khi di chuột qua */
+}
+
+/* Thêm kiểu cho dòng chào mừng */
+.welcome-message {
+    color: white; /* Màu chữ */
+    font-size: 16px; /* Kích thước chữ */
+    margin-right: 10px; /* Khoảng cách bên phải */
+    display: flex; /* Để căn giữa với nút */
+    align-items: center; /* Căn giữa theo chiều dọc */
+}

@@ -15,8 +15,41 @@ exports.createCustomer = async (req, res) => {
 exports.getCustomers = async (req, res) => {
     try {
         const customers = await Customer.find();
-        res.status(200).send(customers);
+        res.json(customers);
     } catch (error) {
-        res.status(500).send(error);
+        res.status(500).json({ message: 'Error fetching customers' });
+    }
+};
+
+// Thêm khách hàng
+exports.addCustomer = async (req, res) => {
+    const newCustomer = new Customer(req.body);
+    try {
+        await newCustomer.save();
+        res.status(201).json(newCustomer);
+    } catch (error) {
+        res.status(400).json({ message: 'Error adding customer' });
+    }
+};
+
+// Cập nhật khách hàng
+exports.updateCustomer = async (req, res) => {
+    const { id } = req.params;
+    try {
+        const updatedCustomer = await Customer.findByIdAndUpdate(id, req.body, { new: true });
+        res.json(updatedCustomer);
+    } catch (error) {
+        res.status(400).json({ message: 'Error updating customer' });
+    }
+};
+
+// Xóa khách hàng
+exports.deleteCustomer = async (req, res) => {
+    const { id } = req.params;
+    try {
+        await Customer.findByIdAndDelete(id);
+        res.status(204).send();
+    } catch (error) {
+        res.status(400).json({ message: 'Error deleting customer' });
     }
 }; 

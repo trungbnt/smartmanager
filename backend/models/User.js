@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 
 const userSchema = new mongoose.Schema({
     username: {
@@ -33,6 +34,11 @@ userSchema.pre('save', async function(next) {
 // So sánh mật khẩu
 userSchema.methods.comparePassword = async function(password) {
     return await bcrypt.compare(password, this.password);
+};
+
+// Phương thức tạo token
+userSchema.methods.generateToken = function() {
+    return jwt.sign({ id: this._id, role: this.role }, 'secret_key', { expiresIn: '1h' });
 };
 
 const User = mongoose.model('User', userSchema);
