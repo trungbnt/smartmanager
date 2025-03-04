@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import { useHistory } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import Notification from '../components/Notification';
 import '../styles/pages.css';
 
@@ -10,7 +10,7 @@ function Register() {
     const [role, setRole] = useState('customer');
     const [loading, setLoading] = useState(false);
     const [notifications, setNotifications] = useState([]);
-    const history = useHistory();
+    const navigate = useNavigate();
 
     const addNotification = (message, type = 'success') => {
         const id = Date.now();
@@ -36,7 +36,7 @@ function Register() {
             addNotification('Đăng ký thành công! Bạn có thể đăng nhập ngay.');
             // Chuyển hướng đến trang đăng nhập sau 2 giây
             setTimeout(() => {
-                history.push('/login');
+                handleSuccess();
             }, 2000);
         } catch (error) {
             console.error('Error during registration:', error);
@@ -44,6 +44,11 @@ function Register() {
         } finally {
             setLoading(false);
         }
+        navigate('/login');
+    };
+
+    const handleSuccess = () => {
+        navigate('/login');
     };
 
     return (

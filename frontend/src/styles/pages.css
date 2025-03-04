@@ -163,11 +163,12 @@
   
   /* Status badges */
   .status-badge {
-    padding: 0.5rem 1rem;
-    border-radius: 20px;
+    padding: 4px 8px;
+    border-radius: 4px;
     font-size: 0.875rem;
     font-weight: 500;
-    display: inline-block;
+    text-align: center;
+    white-space: nowrap;
   }
   
   .status-pending {
@@ -565,6 +566,49 @@
     width: 100%;
 }
 
+/* Add these styles for the new components */
+.equipment-grid,
+.employee-grid {
+    display: grid;
+    gap: 1rem;
+    margin: 1rem 0;
+}
+
+.maintenance-history {
+    margin-top: 1rem;
+    padding: 1rem;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+}
+
+.status-available { background-color: #28a745; color: white; }
+.status-in-use { background-color: #007bff; color: white; }
+.status-maintenance { background-color: #ffc107; color: black; }
+.status-retired { background-color: #dc3545; color: white; }
+
+.status-active { background-color: #28a745; color: white; }
+.status-inactive { background-color: #dc3545; color: white; }
+
+.status-danger {
+    background-color: #dc3545;
+    color: white;
+}
+
+.status-warning {
+    background-color: #ffc107;
+    color: black;
+}
+
+.status-in-use {
+    background-color: #007bff;
+    color: white;
+}
+
+.status-available {
+    background-color: #28a745;
+    color: white;
+}
+
 /* Responsive design */
   @media (max-width: 768px) {
     .page-container {
@@ -595,3 +639,215 @@
       width: 90%;
     }
   }
+
+.form-row {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.form-row .form-group {
+    flex: 1;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+}
+
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+}
+
+.action-icon {
+    cursor: pointer;
+    font-size: 1.1rem;
+    padding: 0.2rem;
+}
+
+.action-icon.edit { color: #007bff; }
+.action-icon.delete { color: #dc3545; }
+
+.btn {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.btn-primary {
+    background-color: #007bff;
+    color: white;
+}
+
+.btn-secondary {
+    background-color: #6c757d;
+    color: white;
+}
+
+.btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal {
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 800px;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+}
+
+.modal h3 {
+    margin-bottom: 1.5rem;
+    color: #333;
+}
+
+.button-group {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+    margin-top: 1.5rem;
+}
+
+.input-error {
+    border-color: #dc3545 !important;
+}
+
+.error-message {
+    color: #dc3545;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+    display: block;
+}
+
+.status-badge {
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    display: inline-block;
+    text-align: center;
+    white-space: normal;
+    min-width: 120px;
+    line-height: 1.2;
+}
+
+td .status-badge {
+    width: 100%;
+    max-width: 250px;
+}
+
+.status-available {
+    background-color: #28a745;
+    color: white;
+}
+
+.status-in-use {
+    background-color: #007bff;
+    color: white;
+}
+
+.status-warning {
+    background-color: #ffc107;
+    color: black;
+}
+
+.status-maintenance {
+    background-color: #6c757d;
+    color: white;
+}
+
+.table-header {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 1rem;
+}
+
+.add-button {
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.add-button:hover {
+    background-color: #218838;
+}
+
+.status-container {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.status-danger {
+    background-color: #dc3545;
+    color: white;
+}
+
+.status-warning {
+    background-color: #ffc107;
+    color: black;
+}
+
+.status-in-use {
+    background-color: #007bff;
+    color: white;
+}
+
+.status-available {
+    background-color: #28a745;
+    color: white;
+}
+
+.home-container {
+    padding: 2rem;
+    text-align: center;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.home-container h1 {
+    color: #2c3e50;
+    margin-bottom: 1rem;
+}
+
+.home-container p {
+    color: #666;
+    font-size: 1.2rem;
+    line-height: 1.6;
+}

@@ -1,5 +1,7 @@
 const Quote = require('../models/Quote');
 const JobRequest = require('../models/JobRequest');
+const path = require('path');
+const fs = require('fs');
 
 // Tạo báo giá mới
 exports.createQuote = async (req, res) => {

@@ -97,11 +97,21 @@ function Quote() {
     };
 
     const handleRemoveFile = () => {
+        // Reset the FormData file state
         setFormData(prev => ({...prev, file: null}));
-        // Reset the file input
-        const fileInput = document.querySelector('input[type="file"]');
+        
+        // Reset the file input value
+        const fileInput = document.querySelector('.file-input');
         if (fileInput) {
-            fileInput.value = '';
+            // Create a new input element
+            const newFileInput = document.createElement('input');
+            newFileInput.type = 'file';
+            newFileInput.className = 'file-input';
+            newFileInput.accept = fileInput.accept;
+            newFileInput.addEventListener('change', handleFileChange);
+            
+            // Replace old input with new one
+            fileInput.parentNode.replaceChild(newFileInput, fileInput);
         }
     };
 

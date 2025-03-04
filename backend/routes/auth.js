@@ -13,6 +13,8 @@ const reportController = require('../controllers/reportController');
 const User = require('../models/User');
 const authMiddleware = require('../middleware/authMiddleware');
 const auth = require('../middleware/auth');
+const employeeController = require('../controllers/employeeController');
+const equipmentController = require('../controllers/equipmentController');
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
@@ -24,8 +26,14 @@ const storage = multer.diskStorage({
         cb(null, uploadDir);
     },
     filename: (req, file, cb) => {
+        // Get the file name without extension
+        const fileName = path.parse(file.originalname).name;
+        // Get the file extension
+        const fileExt = path.extname(file.originalname);
+        // Create unique suffix
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        cb(null, 'quote-' + uniqueSuffix + path.extname(file.originalname));
+        // Combine original filename with unique suffix
+        cb(null, `${fileName}-${uniqueSuffix}${fileExt}`);
     }
 });
 
@@ -99,5 +107,18 @@ router.get('/reports', authMiddleware(['admin', 'account']), reportController.ge
 router.post('/reports', authMiddleware(['admin', 'account']), reportController.addReport);
 router.put('/reports/:id', authMiddleware(['admin', 'account']), reportController.updateReport);
 router.delete('/reports/:id', authMiddleware(['admin']), reportController.deleteReport);
+
+// Employee routes
+router.post('/employees', auth(['admin']), employeeController.createEmployee);
+router.get('/employees', auth(['admin']), employeeController.getEmployees);
+router.put('/employees/:id', auth(['admin']), employeeController.updateEmployee);
+router.delete('/employees/:id', auth(['admin']), employeeController.deleteEmployee);
+
+// Equipment routes
+router.post('/equipment', auth(['admin', 'engineering']), equipmentController.createEquipment);
+router.get('/equipment', auth(['admin', 'engineering']), equipmentController.getEquipments);
+router.put('/equipment/:id', auth(['admin', 'engineering']), equipmentController.updateEquipment);
+router.delete('/equipment/:id', auth(['admin']), equipmentController.deleteEquipment);
+router.post('/equipment/:id/maintenance', auth(['admin', 'engineering']), equipmentController.addMaintenance);
 
 module.exports = router;

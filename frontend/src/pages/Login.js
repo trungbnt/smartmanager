@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
-import { useHistory } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import Notification from '../components/Notification';
 import '../styles/pages.css';
 
@@ -9,7 +9,7 @@ const Login = ({ onLogin }) => {
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const [notifications, setNotifications] = useState([]);
-    const history = useHistory();
+    const navigate = useNavigate();
     const timeoutRefs = useRef(new Map());
 
     const addNotification = (message, type = 'success') => {
@@ -56,15 +56,20 @@ const Login = ({ onLogin }) => {
             });
 
             if (response.data.token) {
-                // Make sure username is included in the data passed to onLogin
-                const userData = {
+                // Store user data in localStorage
+                localStorage.setItem('token', response.data.token);
+                localStorage.setItem('userRole', response.data.role);
+                localStorage.setItem('username', response.data.username || username);
+                
+                // Update parent component state through onLogin
+                onLogin({
                     token: response.data.token,
                     role: response.data.role,
-                    username: response.data.username || username // Fallback to input username if not in response
-                };
-                onLogin(userData);
+                    username: response.data.username || username
+                });
+                
                 addNotification('Đăng nhập thành công');
-                history.push('/');
+                navigate('/');
             } else {
                 addNotification('Đăng nhập thất bại', 'error');
             }

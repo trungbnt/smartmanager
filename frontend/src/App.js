@@ -1,9 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Route, Switch, Link, Redirect } from 'react-router-dom';
-import { routes } from './routes';
+import { BrowserRouter as Router, Route, Routes, Link, Navigate } from 'react-router-dom';
+import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import EmployeeManagement from './pages/EmployeeManagement';
+import EquipmentManagement from './pages/EquipmentManagement';
 import './styles/pages.css';
+import Contact from './pages/Contact';
+import Customer from './pages/Customer';
+import JobRequest from './pages/JobRequest';
+import Quote from './pages/Quote';
+import Schedule from './pages/Schedule';
+import Invoice from './pages/Invoice';
+import Report from './pages/Report';
 
 const App = () => {
     const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
@@ -32,64 +41,69 @@ const App = () => {
     };
 
     const handleLogin = (userData) => {
-        // Make sure we're getting the correct data
-        if (!userData.username) {
-            console.error('Username is missing from login response');
-            return;
-        }
-
-        // Store in localStorage
-        localStorage.setItem('token', userData.token);
-        localStorage.setItem('userRole', userData.role);
-        localStorage.setItem('username', userData.username);
-
-        // Update state
-        setIsAuthenticated(true);
         setUserRole(userData.role);
         setUsername(userData.username);
+        setIsAuthenticated(true);
     };
 
     const renderNavLinks = () => {
-        const roleRoutes = {
-            customer: ['/job-requests', '/contact'],
-            sales: ['/customers', '/job-requests', '/quotes', '/schedules'],
-            engineering: ['/customers', '/job-requests', '/quotes', '/schedules'],
-            account: ['/customers', '/job-requests', '/invoices', '/reports'],
-            admin: ['/customers', '/job-requests', '/quotes', '/schedules', '/invoices', '/reports']
-        };
-
-        const currentRoutes = roleRoutes[userRole] || [];
+        const userLinks = [];
         
-        return currentRoutes.map(path => {
-            const route = routes.find(r => r.path === path);
-            return route && (
-                <li key={path}>
-                    <Link to={path}>{route.name}</Link>
-                </li>
+        // Customer links
+        if (userRole === 'customer') {
+            userLinks.push(
+                <li key="contact"><Link to="/contact">Liên hệ</Link></li>,
+                <li key="job-requests"><Link to="/job-requests">Yêu cầu công việc</Link></li>
             );
-        });
+        }
+    
+        // Admin links
+        if (userRole === 'admin') {
+            userLinks.push(
+                <li key="customers"><Link to="/customers">Khách hàng</Link></li>,
+                <li key="job-requests"><Link to="/job-requests">Yêu cầu công việc</Link></li>,
+                <li key="quotes"><Link to="/quotes">Báo giá</Link></li>,
+                <li key="schedules"><Link to="/schedules">Lịch trình</Link></li>,
+                <li key="invoices"><Link to="/invoices">Hóa đơn</Link></li>,
+                <li key="reports"><Link to="/reports">Báo cáo</Link></li>,
+                <li key="employees"><Link to="/employees">Quản lý nhân viên</Link></li>,
+                <li key="equipment"><Link to="/equipment">Quản lý thiết bị</Link></li>
+            );
+        }
+    
+        // Sales links
+        if (userRole === 'sales') {
+            userLinks.push(
+                <li key="customers"><Link to="/customers">Khách hàng</Link></li>,
+                <li key="job-requests"><Link to="/job-requests">Yêu cầu công việc</Link></li>,
+                <li key="quotes"><Link to="/quotes">Báo giá</Link></li>,
+                <li key="schedules"><Link to="/schedules">Lịch trình</Link></li>
+            );
+        }
+    
+        // Engineering links
+        if (userRole === 'engineering') {
+            userLinks.push(
+                <li key="customers"><Link to="/customers">Khách hàng</Link></li>,
+                <li key="quotes"><Link to="/quotes">Báo giá</Link></li>,
+                <li key="schedules"><Link to="/schedules">Lịch trình</Link></li>,
+                <li key="equipment"><Link to="/equipment">Quản lý thiết bị</Link></li>
+            );
+        }
+    
+        // Account links (changed from 'accountant' to 'account')
+        if (userRole === 'account') {
+            userLinks.push(
+                <li key="customers"><Link to="/customers">Khách hàng</Link></li>,
+                <li key="job-requests"><Link to="/job-requests">Yêu cầu công việc</Link></li>,
+                <li key="invoices"><Link to="/invoices">Hóa đơn</Link></li>,
+                <li key="reports"><Link to="/reports">Báo cáo</Link></li>,
+                <li key="employees"><Link to="/employees">Quản lý nhân viên</Link></li>
+            );
+        }
+    
+        return userLinks;
     };
-
-    const PrivateRoute = ({ component: Component, roles, ...rest }) => (
-        <Route {...rest} render={props => {
-            if (!isAuthenticated) {
-                return <Redirect to={{
-                    pathname: '/login',
-                    state: { from: props.location }
-                }} />;
-            }
-
-            if (roles && !roles.includes(userRole)) {
-                return <div className="access-denied">
-                    <h2>Không có quyền truy cập</h2>
-                    <p>Bạn không có quyền truy cập trang này.</p>
-                    <Link to="/" className="btn">Về trang chủ</Link>
-                </div>;
-            }
-
-            return <Component {...props} />;
-        }} />
-    );
 
     return (
         <Router>
@@ -125,30 +139,66 @@ const App = () => {
                 </header>
 
                 <main className="app-main">
-                    <Switch>
-                        <Route exact path="/login" 
-                            render={(props) => !isAuthenticated 
-                                ? <Login {...props} onLogin={handleLogin} /> 
-                                : <Redirect to="/" />
-                            } 
-                        />
-                        <Route exact path="/register" 
-                            render={(props) => !isAuthenticated 
-                                ? <Register {...props} /> 
-                                : <Redirect to="/" />
-                            } 
-                        />
-                        {routes.map(({ path, component: Component, roles, exact }) => (
-                            <PrivateRoute 
-                                key={path}
-                                path={path}
-                                exact={exact}
-                                component={Component}
-                                roles={roles}
-                            />
-                        ))}
-                        <Redirect from="*" to="/" />
-                    </Switch>
+                    <Routes>
+                        <Route path="/" element={<Home />} />
+                        <Route path="/login" element={<Login onLogin={handleLogin} />} />
+                        <Route path="/register" element={<Register />} />
+                        
+                        {/* Protected Routes */}
+                        <Route path="/contact" element={
+                            isAuthenticated && userRole === 'customer' ? 
+                            <Contact /> : 
+                            <Navigate to="/login" replace />
+                        } />
+                        
+                        <Route path="/customers" element={
+                            isAuthenticated && ['admin', 'sales', 'engineering', 'account'].includes(userRole) ? 
+                            <Customer /> : 
+                            <Navigate to="/login" replace />
+                        } />
+                        
+                        <Route path="/job-requests" element={
+                            isAuthenticated && ['admin', 'account', 'sales', 'customer'].includes(userRole) ? 
+                            <JobRequest /> : 
+                            <Navigate to="/login" replace />
+                        } />
+                        
+                        <Route path="/quotes" element={
+                            isAuthenticated && ['admin', 'sales', 'engineering'].includes(userRole) ? 
+                            <Quote /> : 
+                            <Navigate to="/login" replace />
+                        } />
+                        
+                        <Route path="/schedules" element={
+                            isAuthenticated && ['admin', 'sales', 'engineering'].includes(userRole) ? 
+                            <Schedule /> : 
+                            <Navigate to="/login" replace />
+                        } />
+                        
+                        <Route path="/invoices" element={
+                            isAuthenticated && ['admin', 'account'].includes(userRole) ? 
+                            <Invoice /> : 
+                            <Navigate to="/login" replace />
+                        } />
+                        
+                        <Route path="/reports" element={
+                            isAuthenticated && ['admin', 'account'].includes(userRole) ? 
+                            <Report /> : 
+                            <Navigate to="/login" replace />
+                        } />
+                        
+                        <Route path="/employees" element={
+                            isAuthenticated && ['admin', 'account'].includes(userRole) ? 
+                            <EmployeeManagement /> : 
+                            <Navigate to="/login" replace />
+                        } />
+                        
+                        <Route path="/equipment" element={
+                            isAuthenticated && ['admin', 'engineering'].includes(userRole) ? 
+                            <EquipmentManagement /> : 
+                            <Navigate to="/login" replace />
+                        } />
+                    </Routes>
                 </main>
 
                 <footer className="app-footer">

@@ -8,6 +8,8 @@ import Quote from './pages/Quote';
 import Schedule from './pages/Schedule';
 import Invoice from './pages/Invoice';
 import Report from './pages/Report';
+import EmployeeManagement from './pages/EmployeeManagement';
+import EquipmentManagement from './pages/EquipmentManagement';
 
 export const routes = [
     {
@@ -69,6 +71,18 @@ export const routes = [
         component: Report,  
         name: 'Báo cáo',
         roles: ['admin', 'account']
+    },
+    {
+        path: '/employees',
+        name: 'Quản lý nhân viên',
+        component: EmployeeManagement,
+        roles: ['admin']
+    },
+    {
+        path: '/equipment',
+        name: 'Quản lý xe và thiết bị',
+        component: EquipmentManagement,
+        roles: ['admin', 'engineering']
     }
 ];
 

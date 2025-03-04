@@ -19,8 +19,14 @@ const storage = multer.diskStorage({
         cb(null, uploadDir);
     },
     filename: function (req, file, cb) {
+        // Get the file name without extension
+        const fileName = path.parse(file.originalname).name;
+        // Get the file extension
+        const fileExt = path.extname(file.originalname);
+        // Create unique suffix
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        cb(null, 'quote-' + uniqueSuffix + path.extname(file.originalname));
+        // Combine original filename with unique suffix
+        cb(null, `${fileName}-${uniqueSuffix}${fileExt}`);
     }
 });
 
