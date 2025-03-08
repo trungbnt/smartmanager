@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { FaEdit, FaTrash, FaSave, FaTimes } from 'react-icons/fa';
-import Notification from '../components/Notification';
 import '../styles/pages.css';
 
 const isValidPhoneNumber = (phone) => {
@@ -12,19 +11,17 @@ const isValidPhoneNumber = (phone) => {
 
 function Customer() {
     const [customers, setCustomers] = useState([]);
-    const [name, setName] = useState('');
-    const [email, setEmail] = useState('');
-    const [phone, setPhone] = useState('');
-    const [address, setAddress] = useState('');
-    const [loading, setLoading] = useState(false);
-    const [notifications, setNotifications] = useState([]);
-    const [editingId, setEditingId] = useState(null);
-    const [editData, setEditData] = useState({
+    const [formData, setFormData] = useState({
         name: '',
         email: '',
         phone: '',
         address: ''
     });
+    const [loading, setLoading] = useState(false);
+    const [editingId, setEditingId] = useState(null);
+    const [notifications, setNotifications] = useState([]);
+    const [phoneError, setPhoneError] = useState('');
+    const [showAddModal, setShowAddModal] = useState(false);
     const [deleteId, setDeleteId] = useState(null);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
@@ -62,9 +59,9 @@ function Customer() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         
-        // Add phone validation before submission
-        if (!isValidPhoneNumber(phone)) {
+        if (!isValidPhoneNumber(formData.phone)) {
             addNotification('Số điện thoại không hợp lệ', 'error');
+            setPhoneError('Vui lòng nhập số điện thoại hợp lệ');
             return;
         }
 
@@ -72,15 +69,18 @@ function Customer() {
             setLoading(true);
             const token = localStorage.getItem('token');
             await axios.post('http://localhost:5000/api/auth/customers', 
-                { name, email, phone, address },
+                formData,
                 {
                     headers: { Authorization: `Bearer ${token}` }
                 }
             );
-            setName('');
-            setEmail('');
-            setPhone('');
-            setAddress('');
+            setFormData({
+                name: '',
+                email: '',
+                phone: '',
+                address: ''
+            });
+            setShowAddModal(false);
             addNotification('Thêm khách hàng thành công');
             await fetchCustomers();
         } catch (err) {
@@ -91,13 +91,8 @@ function Customer() {
     };
 
     const handleEdit = (customer) => {
-        const userRole = localStorage.getItem('userRole');
-        if (userRole !== 'admin' && userRole !== 'account') {
-            addNotification('Người dùng không có quyền chỉnh sửa', 'error');
-            return;
-        }
         setEditingId(customer._id);
-        setEditData({
+        setFormData({
             name: customer.name,
             email: customer.email,
             phone: customer.phone,
@@ -105,15 +100,10 @@ function Customer() {
         });
     };
 
-    const handleCancelEdit = () => {
-        setEditingId(null);
-        setEditData({ name: '', email: '', phone: '', address: '' });
-    };
-
-    const handleSaveEdit = async (id) => {
-        // Add phone validation before saving edit
-        if (!isValidPhoneNumber(editData.phone)) {
+    const handleSave = async (id) => {
+        if (!isValidPhoneNumber(formData.phone)) {
             addNotification('Số điện thoại không hợp lệ', 'error');
+            setPhoneError('Vui lòng nhập số điện thoại hợp lệ');
             return;
         }
 
@@ -121,21 +111,31 @@ function Customer() {
             setLoading(true);
             const token = localStorage.getItem('token');
             await axios.put(`http://localhost:5000/api/auth/customers/${id}`, 
-                editData,
+                formData,
                 {
-                    headers: {
-                        Authorization: `Bearer ${token}`
-                    }
+                    headers: { Authorization: `Bearer ${token}` }
                 }
             );
-            await fetchCustomers();
             setEditingId(null);
-            setEditData({ name: '', email: '', phone: '', address: '' });
             addNotification('Cập nhật thành công');
+            await fetchCustomers();
         } catch (err) {
             addNotification('Không thể cập nhật thông tin khách hàng', 'error');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handlePhoneChange = (e) => {
+        const value = e.target.value;
+        const numbersOnly = value.replace(/[^\d]/g, '');
+        
+        setFormData(prev => ({...prev, phone: numbersOnly}));
+        
+        if (numbersOnly && !isValidPhoneNumber(numbersOnly)) {
+            setPhoneError('Vui lòng nhập số điện thoại hợp lệ');
+        } else {
+            setPhoneError('');
         }
     };
 
@@ -173,70 +173,21 @@ function Customer() {
         <div className="page-container">
             <div className="notifications-container">
                 {notifications.map(note => (
-                    <Notification
-                        key={note.id}
-                        message={note.message}
-                        type={note.type}
-                        onClose={() => removeNotification(note.id)}
-                    />
+                    <div key={note.id} className={`notification ${note.type}`}>
+                        {note.message}
+                    </div>
                 ))}
             </div>
 
-            <h1 className="page-title">Quản lý Khách hàng</h1>
+            <h1>Quản lý khách hàng</h1>
 
-            <form onSubmit={handleSubmit} className="form-container">
-                <div className="form-group">
-                    <label>Tên:</label>
-                    <input 
-                        type="text" 
-                        value={name} 
-                        onChange={(e) => setName(e.target.value)} 
-                        required 
-                    />
-                </div>
-
-                <div className="form-group">
-                    <label>Email:</label>
-                    <input 
-                        type="email" 
-                        value={email} 
-                        onChange={(e) => setEmail(e.target.value)} 
-                        required 
-                    />
-                </div>
-
-                <div className="form-group">
-                    <label>Số điện thoại:</label>
-                    <input 
-                        type="tel" 
-                        value={phone} 
-                        onChange={(e) => setPhone(e.target.value)} 
-                        pattern="(84|0[3|5|7|8|9])+([0-9]{8})\b"
-                        title="Vui lòng nhập số điện thoại hợp lệ (VD: 0912345678)"
-                        required 
-                    />
-                    <small className="form-text">
-                        Định dạng: 10 số, bắt đầu bằng 03, 05, 07, 08, 09 hoặc 84
-                    </small>
-                </div>
-
-                <div className="form-group">
-                    <label>Địa chỉ:</label>
-                    <input 
-                        type="text" 
-                        value={address} 
-                        onChange={(e) => setAddress(e.target.value)} 
-                        required 
-                    />
-                </div>
-
-                <button type="submit" className="btn" disabled={loading}>
-                    {loading ? 'Đang xử lý...' : 'Thêm Khách hàng'}
+            <div className="table-header">
+                <button onClick={() => setShowAddModal(true)} className="btn btn-primary add-button">
+                    + Thêm khách hàng
                 </button>
-            </form>
+            </div>
 
             <div className="table-container">
-                <h2>Danh sách Khách hàng</h2>
                 {loading ? (
                     <p>Đang tải...</p>
                 ) : customers.length > 0 ? (
@@ -253,80 +204,23 @@ function Customer() {
                         <tbody>
                             {customers.map(customer => (
                                 <tr key={customer._id}>
+                                    <td>{customer.name}</td>
+                                    <td>{customer.email}</td>
+                                    <td>{customer.phone}</td>
+                                    <td>{customer.address}</td>
                                     <td>
-                                        {editingId === customer._id ? (
-                                            <input
-                                                type="text"
-                                                value={editData.name}
-                                                onChange={(e) => setEditData({...editData, name: e.target.value})}
+                                        <div className="action-buttons">
+                                            <FaEdit
+                                                className="action-icon edit"
+                                                onClick={() => handleEdit(customer)}
+                                                title="Sửa"
                                             />
-                                        ) : (
-                                            customer.name
-                                        )}
-                                    </td>
-                                    <td>
-                                        {editingId === customer._id ? (
-                                            <input
-                                                type="email"
-                                                value={editData.email}
-                                                onChange={(e) => setEditData({...editData, email: e.target.value})}
+                                            <FaTrash
+                                                className="action-icon delete"
+                                                onClick={() => handleDelete(customer._id)}
+                                                title="Xóa"
                                             />
-                                        ) : (
-                                            customer.email
-                                        )}
-                                    </td>
-                                    <td>
-                                        {editingId === customer._id ? (
-                                            <input
-                                                type="tel"
-                                                value={editData.phone}
-                                                onChange={(e) => setEditData({...editData, phone: e.target.value})}
-                                                pattern="(84|0[3|5|7|8|9])+([0-9]{8})\b"
-                                                title="Vui lòng nhập số điện thoại hợp lệ (VD: 0912345678)"
-                                            />
-                                        ) : (
-                                            customer.phone
-                                        )}
-                                    </td>
-                                    <td>
-                                        {editingId === customer._id ? (
-                                            <input
-                                                type="text"
-                                                value={editData.address}
-                                                onChange={(e) => setEditData({...editData, address: e.target.value})}
-                                            />
-                                        ) : (
-                                            customer.address
-                                        )}
-                                    </td>
-                                    <td>
-                                        {editingId === customer._id ? (
-                                            <>
-                                                <FaSave 
-                                                    onClick={() => handleSaveEdit(customer._id)}
-                                                    className="action-icon save"
-                                                    title="Lưu"
-                                                />
-                                                <FaTimes
-                                                    onClick={handleCancelEdit}
-                                                    className="action-icon cancel"
-                                                    title="Hủy"
-                                                />
-                                            </>
-                                        ) : (
-                                            <>
-                                                <FaEdit 
-                                                    onClick={() => handleEdit(customer)}
-                                                    className="action-icon edit"
-                                                    title="Sửa"
-                                                />
-                                                <FaTrash 
-                                                    onClick={() => handleDelete(customer._id)}
-                                                    className="action-icon delete"
-                                                    title="Xóa"
-                                                />
-                                            </>
-                                        )}
+                                        </div>
                                     </td>
                                 </tr>
                             ))}
@@ -336,6 +230,155 @@ function Customer() {
                     <p>Chưa có khách hàng nào.</p>
                 )}
             </div>
+
+            {/* Add Modal */}
+            {showAddModal && (
+                <div className="overlay">
+                    <div className="modal">
+                        <h3>Thêm khách hàng mới</h3>
+                        <form onSubmit={handleSubmit} className="form-container">
+                            <div className="form-row">
+                                <div className="form-group">
+                                    <label>Tên:</label>
+                                    <input
+                                        type="text"
+                                        value={formData.name}
+                                        onChange={(e) => setFormData({...formData, name: e.target.value})}
+                                        required
+                                    />
+                                </div>
+                                <div className="form-group">
+                                    <label>Email:</label>
+                                    <input
+                                        type="email"
+                                        value={formData.email}
+                                        onChange={(e) => setFormData({...formData, email: e.target.value})}
+                                        required
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="form-row">
+                                <div className="form-group">
+                                    <label>Số điện thoại:</label>
+                                    <input
+                                        type="tel"
+                                        value={formData.phone}
+                                        onChange={handlePhoneChange}
+                                        required
+                                        className={phoneError ? 'input-error' : ''}
+                                    />
+                                    {phoneError && <span className="error-message">{phoneError}</span>}
+                                </div>
+                                <div className="form-group">
+                                    <label>Địa chỉ:</label>
+                                    <input
+                                        type="text"
+                                        value={formData.address}
+                                        onChange={(e) => setFormData({...formData, address: e.target.value})}
+                                        required
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="button-group">
+                                <button 
+                                    type="submit"
+                                    className="btn btn-primary"
+                                    disabled={loading || phoneError}
+                                >
+                                    {loading ? 'Đang xử lý...' : <><FaSave /> Lưu</>}
+                                </button>
+                                <button 
+                                    type="button"
+                                    onClick={() => {
+                                        setShowAddModal(false);
+                                        setPhoneError('');
+                                    }}
+                                    className="btn btn-secondary"
+                                >
+                                    <FaTimes /> Hủy
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Edit Modal */}
+            {editingId && (
+                <div className="overlay">
+                    <div className="modal">
+                        <h3>Chỉnh sửa thông tin khách hàng</h3>
+                        <form className="form-container">
+                            <div className="form-row">
+                                <div className="form-group">
+                                    <label>Tên:</label>
+                                    <input
+                                        type="text"
+                                        value={formData.name}
+                                        onChange={(e) => setFormData({...formData, name: e.target.value})}
+                                        required
+                                    />
+                                </div>
+                                <div className="form-group">
+                                    <label>Email:</label>
+                                    <input
+                                        type="email"
+                                        value={formData.email}
+                                        onChange={(e) => setFormData({...formData, email: e.target.value})}
+                                        required
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="form-row">
+                                <div className="form-group">
+                                    <label>Số điện thoại:</label>
+                                    <input
+                                        type="tel"
+                                        value={formData.phone}
+                                        onChange={handlePhoneChange}
+                                        required
+                                        className={phoneError ? 'input-error' : ''}
+                                    />
+                                    {phoneError && <span className="error-message">{phoneError}</span>}
+                                </div>
+                                <div className="form-group">
+                                    <label>Địa chỉ:</label>
+                                    <input
+                                        type="text"
+                                        value={formData.address}
+                                        onChange={(e) => setFormData({...formData, address: e.target.value})}
+                                        required
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="button-group">
+                                <button 
+                                    type="button"
+                                    onClick={() => handleSave(editingId)}
+                                    className="btn btn-primary"
+                                    disabled={loading || phoneError}
+                                >
+                                    {loading ? 'Đang xử lý...' : <><FaSave /> Lưu</>}
+                                </button>
+                                <button 
+                                    type="button"
+                                    onClick={() => {
+                                        setEditingId(null);
+                                        setPhoneError('');
+                                    }}
+                                    className="btn btn-secondary"
+                                >
+                                    <FaTimes /> Hủy
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
 
             {showDeleteConfirm && (
                 <div className="overlay">

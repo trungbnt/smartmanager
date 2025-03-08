@@ -4,7 +4,6 @@ const authMiddleware = (roles = []) => {
     return (req, res, next) => {
         // Lấy token từ header
         const token = req.headers['authorization']?.split(' ')[1];
-        console.log('Token from Header:', token); // Log token từ header
         if (!token) {
             return res.status(403).json({ message: 'No token provided' });
         }

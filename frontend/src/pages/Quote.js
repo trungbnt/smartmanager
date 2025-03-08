@@ -2,9 +2,15 @@ import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { CKEditor } from '@ckeditor/ckeditor5-react';
 import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
+import { FaEdit, FaTrash, FaSave, FaTimes } from 'react-icons/fa';
 import Notification from '../components/Notification';
 import '../styles/pages.css';
-import { FaEdit, FaTrash, FaSave, FaTimes } from 'react-icons/fa';
+
+const STATUS_LABELS = {
+    'pending': 'Chờ xử lý',
+    'approved': 'Đã duyệt',
+    'rejected': 'Từ chối'
+};
 
 function Quote() {
     const [quotes, setQuotes] = useState([]);
@@ -26,6 +32,7 @@ function Quote() {
     });
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [deleteId, setDeleteId] = useState(null);
+    const [showAddModal, setShowAddModal] = useState(false);
 
     const removeNotification = useCallback((id) => {
         setNotifications(prev => prev.filter(note => note.id !== id));
@@ -176,6 +183,7 @@ function Quote() {
                     details: '',
                     file: null
                 });
+                setShowAddModal(false); // Close the modal after success
                 addNotification('Tạo báo giá thành công!');
                 await fetchQuotes();
             }
@@ -282,87 +290,14 @@ function Quote() {
             </div>
 
             <h1 className="page-title">Báo giá</h1>
-            
-            <form onSubmit={handleSubmit} className="form-container">
-                <div className="form-group">
-                    <label>ID Yêu cầu công việc:</label>
-                    <select 
-                        value={formData.jobRequestId}
-                        onChange={e => setFormData({...formData, jobRequestId: e.target.value})}
-                        required
-                        className="form-select"
-                    >
-                        <option value="">Chọn yêu cầu công việc</option>
-                        {jobRequests.map(request => (
-                            <option key={request._id} value={request.requestId}>
-                                {request.requestId} - {request.title}
-                            </option>
-                        ))}
-                    </select>
-                </div>
 
-                <div className="form-group">
-                    <label>Số tiền:</label>
-                    <div className="amount-input-container">
-                        <input 
-                            type="text"
-                            value={formData.amount}
-                            onChange={(e) => {
-                                // Remove non-numeric characters except decimal point
-                                const value = e.target.value.replace(/[^\d.]/g, '');
-                                // Ensure only one decimal point
-                                const parts = value.split('.');
-                                const formatted = parts[0] + (parts.length > 1 ? '.' + parts[1] : '');
-                                setFormData({...formData, amount: formatted});
-                            }}
-                            required 
-                        />
-                        <span className="currency-suffix">VNĐ</span>
-                    </div>
-                </div>
-
-                <div className="form-group">
-                    <label>Chi tiết:</label>
-                    <CKEditor
-                        editor={ClassicEditor}
-                        data={formData.details}
-                        onChange={(event, editor) => {
-                            const data = editor.getData();
-                            setFormData(prev => ({...prev, details: data}));
-                        }}
-                    />
-                </div>
-
-                <div className="form-group">
-                    <label>Tập tin đính kèm (PDF, DOCX, XLSX):</label>
-                    <input 
-                        type="file"
-                        accept=".pdf,.docx,.xlsx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                        onChange={handleFileChange}
-                        className="file-input"
-                    />
-                    {formData.file && (
-                        <div className="file-preview">
-                            <div className="file-info">
-                                <p>File đã chọn: {formData.file.name}</p>
-                                <small>({(formData.file.size / (1024 * 1024)).toFixed(2)} MB)</small>
-                            </div>
-                            <FaTimes
-                                className="remove-file-icon"
-                                onClick={handleRemoveFile}
-                                title="Xóa file"
-                            />
-                        </div>
-                    )}
-                </div>
-
-                <button type="submit" className="btn" disabled={loading}>
-                    {loading ? 'Đang xử lý...' : 'Tạo báo giá'}
+            <div className="table-header">
+                <button onClick={() => setShowAddModal(true)} className="btn btn-primary add-button">
+                    + Tạo báo giá
                 </button>
-            </form>
+            </div>
 
             <div className="table-container">
-                <h2>Danh sách báo giá</h2>
                 {loading ? (
                     <p>Đang tải...</p>
                 ) : quotes.length > 0 ? (
@@ -381,40 +316,10 @@ function Quote() {
                         <tbody>
                             {quotes.map(quote => (
                                 <tr key={quote._id}>
-                                    <td>{editingId === quote._id ? (
-                                        <select
-                                            value={editData.jobRequestId}
-                                            onChange={(e) => setEditData({...editData, jobRequestId: e.target.value})}
-                                            required
-                                        >
-                                            {jobRequests.map(request => (
-                                                <option key={request._id} value={request.requestId}>
-                                                    {request.requestId} - {request.title}
-                                                </option>
-                                            ))}
-                                        </select>
-                                    ) : quote.jobRequestId}</td>
+                                    <td>{quote.jobRequestId}</td>
+                                    <td>{quote.amount.toLocaleString()} VNĐ</td>
                                     <td>
-                                        {editingId === quote._id ? (
-                                            <input
-                                                type="text"
-                                                value={editData.amount}
-                                                onChange={(e) => setEditData({...editData, amount: e.target.value})}
-                                                required
-                                            />
-                                        ) : `${quote.amount.toLocaleString()} VNĐ`}
-                                    </td>
-                                    <td>
-                                        {editingId === quote._id ? (
-                                            <CKEditor
-                                                editor={ClassicEditor}
-                                                data={editData.details}
-                                                onChange={(event, editor) => {
-                                                    const data = editor.getData();
-                                                    setEditData(prev => ({...prev, details: data}));
-                                                }}
-                                            />
-                                        ) : <div dangerouslySetInnerHTML={{ __html: quote.details }}></div>}
+                                        <div dangerouslySetInnerHTML={{ __html: quote.details }}></div>
                                     </td>
                                     <td>
                                         {quote.fileUrl && (
@@ -428,46 +333,24 @@ function Quote() {
                                         )}
                                     </td>
                                     <td>
-                                        {editingId === quote._id ? (
-                                            <select
-                                                value={editData.status}
-                                                onChange={(e) => setEditData({...editData, status: e.target.value})}
-                                            >
-                                                <option value="pending">Chờ xử lý</option>
-                                                <option value="approved">Đã duyệt</option>
-                                                <option value="rejected">Từ chối</option>
-                                            </select>
-                                        ) : quote.status}
+                                        <span className={`status-badge status-${quote.status}`}>
+                                            {STATUS_LABELS[quote.status] || STATUS_LABELS.pending}
+                                        </span>
                                     </td>
                                     <td>{new Date(quote.createdAt).toLocaleDateString()}</td>
                                     <td>
-                                        {editingId === quote._id ? (
-                                            <>
-                                                <FaSave 
-                                                    onClick={() => handleSaveEdit(quote._id)}
-                                                    className="action-icon save"
-                                                    title="Lưu"
-                                                />
-                                                <FaTimes
-                                                    onClick={handleCancelEdit}
-                                                    className="action-icon cancel"
-                                                    title="Hủy"
-                                                />
-                                            </>
-                                        ) : (
-                                            <>
-                                                <FaEdit 
-                                                    onClick={() => handleEdit(quote)}
-                                                    className="action-icon edit"
-                                                    title="Sửa"
-                                                />
-                                                <FaTrash 
-                                                    onClick={() => handleDelete(quote._id)}
-                                                    className="action-icon delete"
-                                                    title="Xóa"
-                                                />
-                                            </>
-                                        )}
+                                        <div className="action-buttons">
+                                            <FaEdit 
+                                                onClick={() => handleEdit(quote)}
+                                                className="action-icon edit"
+                                                title="Sửa"
+                                            />
+                                            <FaTrash 
+                                                onClick={() => handleDelete(quote._id)}
+                                                className="action-icon delete"
+                                                title="Xóa"
+                                            />
+                                        </div>
                                     </td>
                                 </tr>
                             ))}
@@ -478,6 +361,215 @@ function Quote() {
                 )}
             </div>
 
+            {/* Add Modal */}
+            {showAddModal && (
+                <div className="overlay">
+                    <div className="modal">
+                        <div className="modal-header">
+                            <h3>Tạo báo giá mới</h3>
+                            <FaTimes
+                                className="close-icon"
+                                onClick={() => setShowAddModal(false)}
+                                title="Đóng"
+                            />
+                        </div>
+                        <form onSubmit={handleSubmit} className="form-container">
+                            <div className="form-row">
+                                <div className="form-group">
+                                    <label>ID Yêu cầu công việc:</label>
+                                    <select 
+                                        value={formData.jobRequestId}
+                                        onChange={e => setFormData({...formData, jobRequestId: e.target.value})}
+                                        required
+                                        className="form-select"
+                                    >
+                                        <option value="">Chọn yêu cầu công việc</option>
+                                        {jobRequests.map(request => (
+                                            <option key={request._id} value={request.requestId}>
+                                                {request.requestId} - {request.title}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div className="form-group">
+                                    <label>Số tiền:</label>
+                                    <div className="amount-input-container">
+                                        <input 
+                                            type="text"
+                                            value={formData.amount}
+                                            onChange={(e) => {
+                                                const value = e.target.value.replace(/[^\d.]/g, '');
+                                                const parts = value.split('.');
+                                                const formatted = parts[0] + (parts.length > 1 ? '.' + parts[1] : '');
+                                                setFormData({...formData, amount: formatted});
+                                            }}
+                                            required 
+                                        />
+                                        <span className="currency-suffix">VNĐ</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="form-row">
+                                <div className="form-group" style={{ flex: 1 }}>
+                                    <label>Chi tiết:</label>
+                                    <CKEditor
+                                        editor={ClassicEditor}
+                                        data={formData.details}
+                                        onChange={(event, editor) => {
+                                            const data = editor.getData();
+                                            setFormData(prev => ({...prev, details: data}));
+                                        }}
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="form-row">
+                                <div className="form-group">
+                                    <label>Tập tin đính kèm:</label>
+                                    <input 
+                                        type="file"
+                                        onChange={handleFileChange}
+                                        className="file-input"
+                                        accept=".pdf,.docx,.xlsx"
+                                    />
+                                    {formData.file && (
+                                        <div className="file-preview">
+                                            <span>{formData.file.name}</span>
+                                            <FaTimes
+                                                className="remove-file-icon"
+                                                onClick={handleRemoveFile}
+                                                title="Xóa file"
+                                            />
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            <div className="button-group">
+                                <button 
+                                    type="submit"
+                                    className="btn btn-primary"
+                                    disabled={loading}
+                                >
+                                    {loading ? 'Đang xử lý...' : <><FaSave /> Lưu</>}
+                                </button>
+                                <button 
+                                    type="button"
+                                    onClick={() => setShowAddModal(false)}
+                                    className="btn btn-secondary"
+                                >
+                                    <FaTimes /> Hủy
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Edit Modal */}
+            {editingId && (
+                <div className="overlay">
+                    <div className="modal">
+                        <div className="modal-header">
+                            <h3>Chỉnh sửa báo giá</h3>
+                            <FaTimes
+                                className="close-icon"
+                                onClick={handleCancelEdit}
+                                title="Đóng"
+                            />
+                        </div>
+                        <form className="form-container">
+                            <div className="form-row">
+                                <div className="form-group">
+                                    <label>ID Yêu cầu công việc:</label>
+                                    <select 
+                                        value={editData.jobRequestId}
+                                        onChange={e => setEditData({...editData, jobRequestId: e.target.value})}
+                                        required
+                                        className="form-select"
+                                    >
+                                        <option value="">Chọn yêu cầu công việc</option>
+                                        {jobRequests.map(request => (
+                                            <option key={request._id} value={request.requestId}>
+                                                {request.requestId} - {request.title}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div className="form-group">
+                                    <label>Số tiền:</label>
+                                    <div className="amount-input-container">
+                                        <input 
+                                            type="text"
+                                            value={editData.amount}
+                                            onChange={(e) => {
+                                                const value = e.target.value.replace(/[^\d.]/g, '');
+                                                const parts = value.split('.');
+                                                const formatted = parts[0] + (parts.length > 1 ? '.' + parts[1] : '');
+                                                setEditData({...editData, amount: formatted});
+                                            }}
+                                            required 
+                                        />
+                                        <span className="currency-suffix">VNĐ</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="form-row">
+                                <div className="form-group" style={{ flex: 1 }}>
+                                    <label>Chi tiết:</label>
+                                    <CKEditor
+                                        editor={ClassicEditor}
+                                        data={editData.details}
+                                        onChange={(event, editor) => {
+                                            const data = editor.getData();
+                                            setEditData(prev => ({...prev, details: data}));
+                                        }}
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="form-row">
+                                <div className="form-group">
+                                    <label>Trạng thái:</label>
+                                    <select
+                                        value={editData.status}
+                                        onChange={(e) => setEditData({...editData, status: e.target.value})}
+                                        className="form-select"
+                                    >
+                                        {Object.entries(STATUS_LABELS).map(([value, label]) => (
+                                            <option key={value} value={value}>
+                                                {label}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div className="button-group">
+                                <button 
+                                    type="button"
+                                    onClick={() => handleSaveEdit(editingId)}
+                                    className="btn btn-primary"
+                                    disabled={loading}
+                                >
+                                    {loading ? 'Đang xử lý...' : <><FaSave /> Lưu</>}
+                                </button>
+                                <button 
+                                    type="button"
+                                    onClick={handleCancelEdit}
+                                    className="btn btn-secondary"
+                                >
+                                    <FaTimes /> Hủy
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Delete Confirmation Modal */}
             {showDeleteConfirm && (
                 <div className="overlay">
                     <div className="popup">

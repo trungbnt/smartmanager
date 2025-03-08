@@ -1,11 +1,19 @@
 const mongoose = require('mongoose');
 
 const jobRequestSchema = new mongoose.Schema({
+    requestId: {
+        type: String,
+        required: true,
+        unique: true
+    },
     customerId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
+        ref: 'Customer',
         required: true
     },
+    customerName: String,
+    customerEmail: String,
+    customerPhone: String,
     title: {
         type: String,
         required: true
@@ -22,29 +30,25 @@ const jobRequestSchema = new mongoose.Schema({
     createdAt: {
         type: Date,
         default: Date.now
-    },
-    requestId: {
-        type: String,
-        unique: true,
-        required: true
     }
 });
 
-// Add virtual getter for status label
-jobRequestSchema.virtual('statusLabel').get(function() {
-    const labels = {
-        pending: 'Chờ xử lý',
-        processing: 'Đang xử lý',
-        completed: 'Hoàn thành',
-        cancelled: 'Đã hủy'
-    };
-    return labels[this.status] || 'Chờ xử lý';
+// Add pre-save middleware to ensure customer info is populated
+jobRequestSchema.pre('save', async function(next) {
+    try {
+        if (this.isNew || this.isModified('customerId')) {
+            const Customer = mongoose.model('Customer');
+            const customer = await Customer.findById(this.customerId);
+            if (customer) {
+                this.customerName = customer.name;
+                this.customerEmail = customer.email;
+                this.customerPhone = customer.phone;
+            }
+        }
+        next();
+    } catch (err) {
+        next(err);
+    }
 });
 
-// Ensure virtuals are included when converting to JSON
-jobRequestSchema.set('toJSON', {
-    virtuals: true
-});
-
-const JobRequest = mongoose.model('JobRequest', jobRequestSchema);
-module.exports = JobRequest;
+module.exports = mongoose.model('JobRequest', jobRequestSchema);

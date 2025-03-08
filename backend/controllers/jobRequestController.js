@@ -2,12 +2,29 @@ const JobRequest = require('../models/JobRequest');
 
 // Tạo yêu cầu công việc mới
 const createJobRequest = async (req, res) => {
-    const newJobRequest = new JobRequest(req.body);
     try {
+        // Lấy tất cả dữ liệu từ request body
+        const { title, description, requestId, customerId, customerName, customerEmail, customerPhone } = req.body;
+        
+        // Tạo đối tượng JobRequest mới với đầy đủ thông tin
+        const newJobRequest = new JobRequest({
+            title,
+            description,
+            requestId,
+            customerId,
+            customerName,
+            customerEmail,
+            customerPhone,
+            status: 'pending'
+        });
+        
+        // Lưu vào database
         await newJobRequest.save();
+        
+        // Trả về response với đầy đủ thông tin
         res.status(201).json(newJobRequest);
     } catch (error) {
-        res.status(400).json({ message: 'Error adding job request' });
+        res.status(400).json({ message: 'Error adding job request', error: error.message });
     }
 };
 
@@ -23,18 +40,28 @@ const getJobRequests = async (req, res) => {
 
 // Thêm yêu cầu công việc
 const addJobRequest = async (req, res) => {
-    const newJobRequest = new JobRequest({
-        customerId: req.user.id,
-        title: req.body.title,
-        description: req.body.description,
-        requestId: req.body.requestId // Add this line for the new requestId field
-    });
-
     try {
+        const { title, description, requestId, customerId, customerName, customerEmail, customerPhone } = req.body;
+        
+        // Tạo đối tượng JobRequest mới với đầy đủ thông tin
+        const newJobRequest = new JobRequest({
+            title,
+            description,
+            requestId,
+            customerId,
+            customerName,
+            customerEmail,
+            customerPhone,
+            status: 'pending'
+        });
+        
+        // Lưu vào database
         await newJobRequest.save();
+        
+        // Trả về response với đầy đủ thông tin
         res.status(201).json(newJobRequest);
     } catch (error) {
-        res.status(400).json({ message: 'Error adding job request' });
+        res.status(400).json({ message: 'Error adding job request', error: error.message });
     }
 };
 
@@ -42,7 +69,7 @@ const addJobRequest = async (req, res) => {
 const updateJobRequest = async (req, res) => {
     try {
         const { id } = req.params;
-        const { title, description, status } = req.body;
+        const { title, description, status, customerId, customerName, customerEmail, customerPhone } = req.body;
         
         const jobRequest = await JobRequest.findById(id);
         
@@ -60,11 +87,14 @@ const updateJobRequest = async (req, res) => {
         jobRequest.title = title;
         jobRequest.description = description;
         jobRequest.status = status;
+        jobRequest.customerId = customerId;
+        jobRequest.customerName = customerName;
+        jobRequest.customerEmail = customerEmail;
+        jobRequest.customerPhone = customerPhone;
 
         await jobRequest.save();
         res.json(jobRequest);
     } catch (error) {
-        console.error('Error updating job request:', error);
         res.status(500).json({ message: 'Lỗi server' });
     }
 };

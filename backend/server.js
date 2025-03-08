@@ -68,6 +68,21 @@ app.use('/api/auth', authRoutes);
 // Add this after your middleware setup and before your routes
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
+// Xóa các log về request
+app.use((req, res, next) => {
+    next();
+});
+
+// Xóa các log về response
+app.use((req, res, next) => {
+    const originalSend = res.send;
+    res.send = function(body) {
+        // Xóa các log về response
+        return originalSend.call(this, body);
+    };
+    next();
+});
+
 // Error handling middleware
 app.use((err, req, res, next) => {
     console.error(err.stack);

@@ -43,16 +43,24 @@ function JobRequest() {
     const [editData, setEditData] = useState({ 
         title: '', 
         description: '', 
-        status: 'pending' 
+        status: 'pending',
+        customerId: '',
+        customerName: '',
+        customerEmail: '',
+        customerPhone: ''
     });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [notifications, setNotifications] = useState([]);
     const [deleteId, setDeleteId] = useState(null);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [showAddModal, setShowAddModal] = useState(false);
+    const [customers, setCustomers] = useState([]);
+    const [selectedCustomer, setSelectedCustomer] = useState('');
 
     useEffect(() => {
         fetchJobRequests();
+        fetchCustomers();
     }, []);
 
     const fetchJobRequests = async () => {
@@ -66,6 +74,20 @@ function JobRequest() {
             setJobRequests(response.data);
         } catch (err) {
             setError('Không thể tải danh sách yêu cầu');
+        }
+    };
+
+    const fetchCustomers = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await axios.get('http://localhost:5000/api/auth/customers', {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
+            setCustomers(response.data);
+        } catch (err) {
+            console.error('Error fetching customers:', err);
         }
     };
 
@@ -86,31 +108,72 @@ function JobRequest() {
         try {
             setLoading(true);
             
-            // Generate unique ID
+            if (!selectedCustomer) {
+                addNotification('Vui lòng chọn khách hàng', 'error');
+                return;
+            }
+
+            if (!title.trim() || !description.trim()) {
+                addNotification('Vui lòng điền đầy đủ thông tin', 'error');
+                return;
+            }
+
+            // Get customer data
+            const selectedCustomerData = customers.find(c => c._id === selectedCustomer);
+            if (!selectedCustomerData) {
+                addNotification('Không tìm thấy thông tin khách hàng', 'error');
+                return;
+            }
+
             let newRequestId;
             do {
                 newRequestId = generateRandomId();
             } while (!isIdUnique(newRequestId, jobRequests));
 
             const token = localStorage.getItem('token');
-            await axios.post('http://localhost:5000/api/auth/job-requests', 
-                { 
-                    title, 
-                    description,
-                    requestId: newRequestId 
-                }, 
+            const requestData = { 
+                title: title.trim(), 
+                description: description.trim(),
+                requestId: newRequestId,
+                customerId: selectedCustomer,
+                customerName: selectedCustomerData.name,
+                customerEmail: selectedCustomerData.email,
+                customerPhone: selectedCustomerData.phone
+            };
+
+            console.log('Sending request:', requestData);
+            
+            const response = await axios.post(
+                'http://localhost:5000/api/auth/job-requests', 
+                requestData,
                 {
                     headers: {
-                        Authorization: `Bearer ${token}`
+                        Authorization: `Bearer ${token}`,
+                        'Content-Type': 'application/json'
                     }
                 }
             );
-            setTitle('');
-            setDescription('');
-            await fetchJobRequests();
-            addNotification('Tạo yêu cầu thành công');
+
+            console.log('Response:', response.data);
+
+            if (response.data) {
+                setTitle('');
+                setDescription('');
+                setSelectedCustomer('');
+                setShowAddModal(false);
+                await fetchJobRequests();
+                addNotification('Tạo yêu cầu thành công');
+            }
         } catch (err) {
-            addNotification('Không thể tạo yêu cầu mới', 'error');
+            console.error('Error details:', {
+                message: err.message,
+                response: err.response?.data,
+                status: err.response?.status
+            });
+            addNotification(
+                err.response?.data?.message || 'Không thể tạo yêu cầu mới', 
+                'error'
+            );
         } finally {
             setLoading(false);
         }
@@ -124,36 +187,68 @@ function JobRequest() {
             return;
         }
         setEditingId(request._id);
+        setSelectedCustomer(request.customerId);
         setEditData({
             title: request.title,
             description: request.description,
-            status: request.status || 'pending'
+            status: request.status || 'pending',
+            customerId: request.customerId,
+            customerName: request.customerName,
+            customerEmail: request.customerEmail,
+            customerPhone: request.customerPhone
         });
     };
 
     const handleCancelEdit = () => {
         setEditingId(null);
-        setEditData({ title: '', description: '', status: 'pending' });
+        setEditData({ title: '', description: '', status: 'pending', customerId: '', customerName: '', customerEmail: '', customerPhone: '' });
     };
 
     const handleSaveEdit = async (id) => {
         try {
             setLoading(true);
             const token = localStorage.getItem('token');
-            await axios.put(`http://localhost:5000/api/auth/job-requests/${id}`, 
-                editData,
+            
+            // Đảm bảo có đầy đủ thông tin khách hàng
+            if (!editData.customerId || !editData.title || !editData.description) {
+                addNotification('Vui lòng điền đầy đủ thông tin', 'error');
+                return;
+            }
+            
+            // Tìm thông tin khách hàng từ danh sách customers
+            const customer = customers.find(c => c._id === editData.customerId);
+            if (!customer) {
+                addNotification('Không tìm thấy thông tin khách hàng', 'error');
+                return;
+            }
+            
+            // Chuẩn bị dữ liệu để gửi lên server
+            const updateData = {
+                ...editData,
+                customerName: customer.name,
+                customerEmail: customer.email,
+                customerPhone: customer.phone
+            };
+            
+            // Gửi yêu cầu cập nhật
+            const response = await axios.put(
+                `http://localhost:5000/api/auth/job-requests/${id}`,
+                updateData,
                 {
                     headers: {
                         Authorization: `Bearer ${token}`
                     }
                 }
             );
-            await fetchJobRequests();
-            setEditingId(null);
-            setEditData({ title: '', description: '', status: 'pending' });
-            addNotification('Cập nhật thành công');
+            
+            // Xử lý kết quả
+            if (response.data) {
+                setEditingId(null);
+                await fetchJobRequests();
+                addNotification('Cập nhật yêu cầu thành công');
+            }
         } catch (err) {
-            addNotification('Không thể cập nhật yêu cầu công việc', 'error');
+            addNotification('Không thể cập nhật yêu cầu', 'error');
         } finally {
             setLoading(false);
         }
@@ -206,37 +301,20 @@ function JobRequest() {
             
             {error && <div className="error-message">{error}</div>}
 
-            <form onSubmit={handleSubmit} className="form-container">
-                <div className="form-group">
-                    <label>Tiêu đề:</label>
-                    <input 
-                        type="text" 
-                        placeholder="Tiêu đề" 
-                        value={title} 
-                        onChange={(e) => setTitle(e.target.value)} 
-                        required 
-                    />
-                </div>
-                <div className="form-group">
-                    <label>Mô tả:</label>
-                    <textarea 
-                        placeholder="Mô tả" 
-                        value={description} 
-                        onChange={(e) => setDescription(e.target.value)} 
-                        required 
-                    />
-                </div>
-                <button type="submit" className="btn" disabled={loading}>
-                    {loading ? 'Đang xử lý...' : 'Gửi yêu cầu'}
+            <div className="table-header">
+                <button onClick={() => setShowAddModal(true)} className="btn btn-primary add-button">
+                    + Gửi yêu cầu
                 </button>
-            </form>
+            </div>
 
             <div className="table-container">
-                <h2>Danh sách yêu cầu công việc</h2>
                 <table>
                     <thead>
                         <tr>
                             <th>ID Yêu cầu</th>
+                            <th>Khách hàng</th>
+                            <th>Email</th>
+                            <th>Số điện thoại</th>
                             <th>Tiêu đề</th>
                             <th>Mô tả</th>
                             <th>Trạng thái</th>
@@ -244,67 +322,23 @@ function JobRequest() {
                         </tr>
                     </thead>
                     <tbody>
-                        {jobRequests.map(request => (
-                            <tr key={request._id}>
-                                <td className="request-id">
-                                    {request.requestId || 'N/A'}
-                                </td>
-                                <td>
-                                    {editingId === request._id ? (
-                                        <input
-                                            type="text"
-                                            value={editData.title}
-                                            onChange={(e) => setEditData({...editData, title: e.target.value})}
-                                        />
-                                    ) : (
-                                        request.title
-                                    )}
-                                </td>
-                                <td>
-                                    {editingId === request._id ? (
-                                        <textarea
-                                            value={editData.description}
-                                            onChange={(e) => setEditData({...editData, description: e.target.value})}
-                                        />
-                                    ) : (
-                                        request.description
-                                    )}
-                                </td>
-                                <td>
-                                    {editingId === request._id ? (
-                                        <select
-                                            value={editData.status}
-                                            onChange={(e) => setEditData({...editData, status: e.target.value})}
-                                            className="status-select"
-                                        >
-                                            {Object.entries(STATUS_OPTIONS).map(([value, label]) => (
-                                                <option key={value} value={value}>
-                                                    {label}
-                                                </option>
-                                            ))}
-                                        </select>
-                                    ) : (
+                        {jobRequests.map(request => {
+                            const customer = customers.find(c => c._id === request.customerId);
+                            return (
+                                <tr key={request._id}>
+                                    <td className="request-id">{request.requestId || 'N/A'}</td>
+                                    <td>{customer?.name || request.customerName || 'N/A'}</td>
+                                    <td>{customer?.email || request.customerEmail || 'N/A'}</td>
+                                    <td>{customer?.phone || request.customerPhone || 'N/A'}</td>
+                                    <td>{request.title}</td>
+                                    <td>{request.description}</td>
+                                    <td>
                                         <span className={`status-badge status-${request.status}`}>
                                             {STATUS_OPTIONS[request.status] || STATUS_OPTIONS.pending}
                                         </span>
-                                    )}
-                                </td>
-                                <td>
-                                    {editingId === request._id ? (
-                                        <>
-                                            <FaSave 
-                                                onClick={() => handleSaveEdit(request._id)}
-                                                className="action-icon save"
-                                                title="Lưu"
-                                            />
-                                            <FaTimes
-                                                onClick={handleCancelEdit}
-                                                className="action-icon cancel"
-                                                title="Hủy"
-                                            />
-                                        </>
-                                    ) : (
-                                        <>
+                                    </td>
+                                    <td>
+                                        <div className="action-buttons">
                                             <FaEdit 
                                                 onClick={() => handleEdit(request)}
                                                 className="action-icon edit"
@@ -315,14 +349,240 @@ function JobRequest() {
                                                 className="action-icon delete"
                                                 title="Xóa"
                                             />
-                                        </>
-                                    )}
-                                </td>
-                            </tr>
-                        ))}
+                                        </div>
+                                    </td>
+                                </tr>
+                            );
+                        })}
                     </tbody>
                 </table>
             </div>
+
+            {/* Add Modal */}
+            {showAddModal && (
+                <div className="overlay">
+                    <div className="modal">
+                        <div className="modal-header">
+                            <h3>Gửi yêu cầu mới</h3>
+                            <FaTimes
+                                className="close-icon"
+                                onClick={() => setShowAddModal(false)}
+                                title="Đóng"
+                            />
+                        </div>
+                        <form onSubmit={handleSubmit} className="form-container">
+                            <div className="form-row">
+                                <div className="form-group">
+                                    <label>Khách hàng:</label>
+                                    <select 
+                                        value={selectedCustomer}
+                                        onChange={(e) => {
+                                            setSelectedCustomer(e.target.value);
+                                            const customer = customers.find(c => c._id === e.target.value);
+                                            if (customer) {
+                                                setEditData(prev => ({
+                                                    ...prev,
+                                                    customerEmail: customer.email,
+                                                    customerPhone: customer.phone
+                                                }));
+                                            }
+                                        }}
+                                        required
+                                        className="form-select"
+                                    >
+                                        <option value="">Chọn khách hàng</option>
+                                        {customers.map(customer => (
+                                            <option key={customer._id} value={customer._id}>
+                                                {customer.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div className="form-row">
+                                <div className="form-group">
+                                    <label>Email khách hàng:</label>
+                                    <input
+                                        type="email"
+                                        value={selectedCustomer ? customers.find(c => c._id === selectedCustomer)?.email || '' : ''}
+                                        disabled
+                                        className="form-control"
+                                    />
+                                </div>
+                                <div className="form-group">
+                                    <label>Số điện thoại khách hàng:</label>
+                                    <input
+                                        type="text"
+                                        value={selectedCustomer ? customers.find(c => c._id === selectedCustomer)?.phone || '' : ''}
+                                        disabled
+                                        className="form-control"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="form-row">
+                                <div className="form-group">
+                                    <label>Tiêu đề:</label>
+                                    <input
+                                        type="text"
+                                        value={title}
+                                        onChange={(e) => setTitle(e.target.value)}
+                                        required
+                                    />
+                                </div>
+                            </div>
+                            <div className="form-row">
+                                <div className="form-group">
+                                    <label>Mô tả:</label>
+                                    <textarea
+                                        value={description}
+                                        onChange={(e) => setDescription(e.target.value)}
+                                        required
+                                    />
+                                </div>
+                            </div>
+                            <div className="button-group">
+                                <button 
+                                    type="submit"
+                                    className="btn btn-primary"
+                                    disabled={loading}
+                                >
+                                    {loading ? 'Đang xử lý...' : <><FaSave /> Lưu</>}
+                                </button>
+                                <button 
+                                    type="button"
+                                    onClick={() => setShowAddModal(false)}
+                                    className="btn btn-secondary"
+                                >
+                                    <FaTimes /> Hủy
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Edit Modal */}
+            {editingId && (
+                <div className="overlay">
+                    <div className="modal">
+                        <div className="modal-header">
+                            <h3>Chỉnh sửa yêu cầu</h3>
+                            <FaTimes
+                                className="close-icon"
+                                onClick={handleCancelEdit}
+                                title="Đóng"
+                            />
+                        </div>
+                        <form className="form-container">
+                            <div className="form-row">
+                                <div className="form-group">
+                                    <label>Khách hàng:</label>
+                                    <select 
+                                        value={editData.customerId}
+                                        onChange={(e) => {
+                                            const customer = customers.find(c => c._id === e.target.value);
+                                            setEditData({
+                                                ...editData,
+                                                customerId: e.target.value,
+                                                customerEmail: customer?.email || '',
+                                                customerPhone: customer?.phone || ''
+                                            });
+                                        }}
+                                        required
+                                        className="form-select"
+                                    >
+                                        <option value="">Chọn khách hàng</option>
+                                        {customers.map(customer => (
+                                            <option key={customer._id} value={customer._id}>
+                                                {customer.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div className="form-row">
+                                <div className="form-group">
+                                    <label>Email khách hàng:</label>
+                                    <input
+                                        type="email"
+                                        value={editData.customerEmail || ''}
+                                        disabled
+                                        className="form-control"
+                                    />
+                                </div>
+                                <div className="form-group">
+                                    <label>Số điện thoại khách hàng:</label>
+                                    <input
+                                        type="text"
+                                        value={editData.customerPhone || ''}
+                                        disabled
+                                        className="form-control"
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Existing fields */}
+                            <div className="form-row">
+                                <div className="form-group">
+                                    <label>Tiêu đề:</label>
+                                    <input
+                                        type="text"
+                                        value={editData.title}
+                                        onChange={(e) => setEditData({...editData, title: e.target.value})}
+                                        required
+                                    />
+                                </div>
+                            </div>
+                            <div className="form-row">
+                                <div className="form-group">
+                                    <label>Mô tả:</label>
+                                    <textarea
+                                        value={editData.description}
+                                        onChange={(e) => setEditData({...editData, description: e.target.value})}
+                                        required
+                                    />
+                                </div>
+                            </div>
+                            <div className="form-row">
+                                <div className="form-group">
+                                    <label>Trạng thái:</label>
+                                    <select
+                                        value={editData.status}
+                                        onChange={(e) => setEditData({...editData, status: e.target.value})}
+                                        className="status-select"
+                                    >
+                                        {Object.entries(STATUS_OPTIONS).map(([value, label]) => (
+                                            <option key={value} value={value}>
+                                                {label}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                            </div>
+                            <div className="button-group">
+                                <button 
+                                    type="button"
+                                    onClick={() => handleSaveEdit(editingId)}
+                                    className="btn btn-primary"
+                                    disabled={loading}
+                                >
+                                    {loading ? 'Đang xử lý...' : <><FaSave /> Lưu</>}
+                                </button>
+                                <button 
+                                    type="button"
+                                    onClick={handleCancelEdit}
+                                    className="btn btn-secondary"
+                                >
+                                    <FaTimes /> Hủy
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
 
             {showDeleteConfirm && (
                 <div className="overlay">
