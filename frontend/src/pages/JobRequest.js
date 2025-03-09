@@ -284,6 +284,28 @@ function JobRequest() {
         }
     };
 
+    const getStatusBadge = (status) => {
+        const statusClasses = {
+            pending: 'status-yellow',     // Chờ xử lý - màu vàng
+            processing: 'status-blue',    // Đang xử lý - màu xanh dương
+            completed: 'status-green',    // Hoàn thành - màu xanh lá
+            cancelled: 'status-red'       // Đã hủy - màu đỏ
+        };
+        
+        const statusLabels = {
+            pending: 'Chờ xử lý',
+            processing: 'Đang xử lý',
+            completed: 'Hoàn thành',
+            cancelled: 'Đã hủy'
+        };
+        
+        return (
+            <span className={`status-badge ${statusClasses[status] || 'status-gray'}`}>
+                {statusLabels[status] || status}
+            </span>
+        );
+    };
+
     return (
         <div className="page-container">
             <div className="notifications-container">
@@ -333,9 +355,7 @@ function JobRequest() {
                                     <td>{request.title}</td>
                                     <td>{request.description}</td>
                                     <td>
-                                        <span className={`status-badge status-${request.status}`}>
-                                            {STATUS_OPTIONS[request.status] || STATUS_OPTIONS.pending}
-                                        </span>
+                                        {getStatusBadge(request.status)}
                                     </td>
                                     <td>
                                         <div className="action-buttons">

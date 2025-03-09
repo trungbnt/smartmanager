@@ -56,25 +56,19 @@ const Login = ({ onLogin }) => {
             });
 
             if (response.data.token) {
-                // Store user data in localStorage
-                localStorage.setItem('token', response.data.token);
-                localStorage.setItem('userRole', response.data.role);
-                localStorage.setItem('username', response.data.username || username);
+                localStorage.setItem('token', `Bearer ${response.data.token}`);
                 
-                // Update parent component state through onLogin
+                // Call onLogin with complete user data
                 onLogin({
-                    token: response.data.token,
                     role: response.data.role,
-                    username: response.data.username || username
+                    username: response.data.username || username // Use input username as fallback
                 });
                 
-                addNotification('Đăng nhập thành công');
                 navigate('/');
-            } else {
-                addNotification('Đăng nhập thất bại', 'error');
             }
         } catch (error) {
-            addNotification(error.response?.data?.message || 'Đăng nhập thất bại', 'error');
+            console.error('Login error:', error);
+            addNotification('Login failed', 'error');
         } finally {
             setLoading(false);
         }

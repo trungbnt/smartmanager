@@ -163,27 +163,31 @@
   
   /* Status badges */
   .status-badge {
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 0.875rem;
-    font-weight: 500;
-    text-align: center;
-    white-space: nowrap;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 0.85em;
+    font-weight: bold;
+    display: inline-block;
   }
   
-  .status-pending {
-    background: #fff3cd;
-    color: #856404;
+  .status-blue {
+    background-color: #3498db;
+    color: white;
   }
   
-  .status-approved {
-    background: #d4edda;
-    color: #155724;
+  .status-orange {
+    background-color: #f39c12;
+    color: white;
   }
   
-  .status-rejected {
-    background: #f8d7da;
-    color: #721c24;
+  .status-green {
+    background-color: #2ecc71;
+    color: white;
+  }
+  
+  .status-gray {
+    background-color: #95a5a6;
+    color: white;
   }
   
   /* Status styles */
@@ -875,4 +879,75 @@ td .status-badge {
 
 .close-icon:hover {
     color: #dc3545;
+}
+
+/* Thêm class status-yellow cho trạng thái "chờ xử lý" */
+.status-yellow {
+    background-color: #ffc107;
+    color: #212529;
+}
+
+/* Thêm class status-red cho trạng thái "Đã từ chối" */
+.status-red {
+    background-color: #dc3545;
+    color: white;
+}
+
+/* Thêm vào file CSS hiện có */
+.report-content {
+    padding: 15px;
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    margin: 10px 0;
+}
+
+.report-content img {
+    max-width: 100%;
+    height: auto;
+}
+
+.ck-editor__editable {
+    min-height: 200px;
+}
+
+.btn-info {
+    background-color: #17a2b8;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    margin-right: 10px;
+    border-radius: 4px;
+}
+
+.btn-info:hover {
+    background-color: #138496;
+}
+
+/* Thêm style cho phần hiển thị chi tiết báo giá */
+.quote-content {
+    padding: 15px;
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    margin: 10px 0;
+}
+
+.quote-content img {
+    max-width: 100%;
+    height: auto;
+}
+
+/* Cập nhật style cho nút xem chi tiết */
+.btn-info.btn-sm {
+    font-size: 0.875rem;
+    padding: 0.25rem 0.5rem;
+}
+
+.action-buttons .btn {
+    margin-right: 5px;
+}
+
+.action-buttons .btn:last-child {
+    margin-right: 0;
 }

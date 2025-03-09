@@ -152,12 +152,13 @@ router.delete('/quotes/:id', async (req, res) => {
 });
 
 // Get all quotes
-router.get('/quotes', async (req, res) => {
+router.get('/quotes', auth(['admin', 'sales', 'engineering']), async (req, res) => {
     try {
-        const quotes = await Quote.find().sort({ createdAt: -1 });
+        const quotes = await Quote.find();
         res.json(quotes);
-    } catch (error) {
-        res.status(500).json({ message: 'Error fetching quotes', error: error.message });
+    } catch (err) {
+        console.error('Error fetching quotes:', err);
+        res.status(500).json({ message: 'Error fetching quotes' });
     }
 });
 

@@ -33,6 +33,9 @@ const App = () => {
 
     const handleLogout = () => {
         ['userRole', 'username', 'token'].forEach(item => localStorage.removeItem(item));
+
+        // Clear all localStorage items
+        localStorage.clear();
         setUserRole(null);
         setUsername(null);
         setIsAuthenticated(false);
@@ -42,8 +45,12 @@ const App = () => {
 
     const handleLogin = (userData) => {
         setUserRole(userData.role);
-        setUsername(userData.username);
+        setUsername(userData.username || 'User'); // Add fallback value
         setIsAuthenticated(true);
+        
+        // Also update localStorage
+        localStorage.setItem('userRole', userData.role);
+        localStorage.setItem('username', userData.username || 'User');
     };
 
     const renderNavLinks = () => {

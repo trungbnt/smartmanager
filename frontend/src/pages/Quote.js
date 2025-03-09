@@ -6,12 +6,6 @@ import { FaEdit, FaTrash, FaSave, FaTimes } from 'react-icons/fa';
 import Notification from '../components/Notification';
 import '../styles/pages.css';
 
-const STATUS_LABELS = {
-    'pending': 'Chờ xử lý',
-    'approved': 'Đã duyệt',
-    'rejected': 'Từ chối'
-};
-
 function Quote() {
     const [quotes, setQuotes] = useState([]);
     const [formData, setFormData] = useState({
@@ -33,6 +27,9 @@ function Quote() {
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [deleteId, setDeleteId] = useState(null);
     const [showAddModal, setShowAddModal] = useState(false);
+    const [editFile, setEditFile] = useState(null);
+    const [showDetail, setShowDetail] = useState(null);
+    const [customers, setCustomers] = useState([]);
 
     const removeNotification = useCallback((id) => {
         setNotifications(prev => prev.filter(note => note.id !== id));
@@ -48,16 +45,19 @@ function Quote() {
 
     const fetchQuotes = useCallback(async () => {
         try {
-            setLoading(true);
             const token = localStorage.getItem('token');
             const response = await axios.get('http://localhost:5000/api/auth/quotes', {
-                headers: { Authorization: `Bearer ${token}` }
+                headers: {
+                    Authorization: token
+                }
             });
             setQuotes(response.data);
-        } catch (err) {
+        } catch (error) {
+            console.error('Error fetching quotes:', error);
+            if (error.response?.status === 401) {
+                window.location.href = '/login';
+            }
             addNotification('Không thể tải danh sách báo giá', 'error');
-        } finally {
-            setLoading(false);
         }
     }, [addNotification]);
 
@@ -73,10 +73,37 @@ function Quote() {
         }
     }, [addNotification]);
 
+    const fetchCustomers = useCallback(async () => {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await axios.get('http://localhost:5000/api/auth/customers', {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setCustomers(response.data);
+        } catch (err) {
+            addNotification('Không thể tải danh sách khách hàng', 'error');
+        }
+    }, [addNotification]);
+
     useEffect(() => {
+        const token = localStorage.getItem('token');
+        const userRole = localStorage.getItem('userRole');
+
+        if (!token) {
+            window.location.href = '/login';
+            return;
+        }
+
+        if (!['admin', 'account', 'sales'].includes(userRole)) {
+            addNotification('Bạn không có quyền truy cập trang này', 'error');
+            window.location.href = '/';
+            return;
+        }
+
         fetchQuotes();
         fetchJobRequests();
-    }, [fetchQuotes, fetchJobRequests]);
+        fetchCustomers();
+    }, [fetchQuotes, fetchJobRequests, fetchCustomers, addNotification]);
 
     const handleFileChange = (e) => {
         const file = e.target.files[0];
@@ -209,37 +236,52 @@ function Quote() {
             details: quote.details,
             status: quote.status || 'pending'
         });
+        setEditFile(quote.file);
     };
 
     const handleCancelEdit = () => {
         setEditingId(null);
         setEditData({ jobRequestId: '', amount: '', details: '', status: 'pending' });
+        setEditFile(null);
     };
 
     const handleSaveEdit = async (id) => {
         try {
             setLoading(true);
-            const token = localStorage.getItem('token');
             
-            const cleanAmount = parseFloat(editData.amount.replace(/[^\d.]/g, ''));
-            if (isNaN(cleanAmount)) {
-                addNotification('Số tiền không hợp lệ', 'error');
-                return;
+            // Tạo FormData để gửi lên server
+            const formData = new FormData();
+            formData.append('jobRequestId', editData.jobRequestId);
+            formData.append('amount', editData.amount);
+            formData.append('details', editData.details);
+            formData.append('status', editData.status); // Đảm bảo status là giá trị mới
+            if (editData.validUntil) {
+                formData.append('validUntil', editData.validUntil);
             }
-
-            await axios.put(`http://localhost:5000/api/auth/quotes/${id}`, 
-                {...editData, amount: cleanAmount},
+            
+            if (editFile) {
+                formData.append('file', editFile);
+            }
+            
+            const token = localStorage.getItem('token');
+            const response = await axios.put(
+                `http://localhost:5000/api/auth/quotes/${id}`,
+                formData,
                 {
                     headers: {
-                        Authorization: `Bearer ${token}`
+                        Authorization: `Bearer ${token}`,
+                        'Content-Type': 'multipart/form-data'
                     }
                 }
             );
-            await fetchQuotes();
-            setEditingId(null);
-            setEditData({ jobRequestId: '', amount: '', details: '', status: 'pending' });
-            addNotification('Cập nhật thành công');
+            
+            if (response.data) {
+                setEditingId(null);
+                await fetchQuotes();
+                addNotification('Cập nhật báo giá thành công');
+            }
         } catch (err) {
+            console.error('Error updating quote:', err);
             addNotification('Không thể cập nhật báo giá', 'error');
         } finally {
             setLoading(false);
@@ -276,6 +318,42 @@ function Quote() {
         }
     };
 
+    const getStatusBadge = (status) => {
+        const statusClasses = {
+            draft: 'status-yellow',      // Bản nháp - màu vàng
+            sent: 'status-blue',         // Đã gửi - màu xanh dương
+            accepted: 'status-green',    // Đã chấp nhận - màu xanh lá
+            rejected: 'status-red',      // Đã từ chối - màu đỏ
+            expired: 'status-gray'       // Hết hạn - màu xám
+        };
+        
+        const statusLabels = {
+            draft: 'Bản nháp',
+            sent: 'Đã gửi',
+            accepted: 'Đã chấp nhận',
+            rejected: 'Đã từ chối',
+            expired: 'Hết hạn'
+        };
+        
+        return (
+            <span className={`status-badge ${statusClasses[status] || 'status-gray'}`}>
+                {statusLabels[status] || status}
+            </span>
+        );
+    };
+
+    const formatCurrency = (amount) => {
+        return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+    };
+
+    const toggleDetail = (quoteId) => {
+        if (showDetail === quoteId) {
+            setShowDetail(null);
+        } else {
+            setShowDetail(quoteId);
+        }
+    };
+
     return (
         <div className="page-container">
             <div className="notifications-container">
@@ -304,56 +382,72 @@ function Quote() {
                     <table>
                         <thead>
                             <tr>
-                                <th>ID Yêu cầu</th>
+                                <th>Mã báo giá</th>
+                                <th>Khách hàng</th>
+                                <th>Yêu cầu công việc</th>
                                 <th>Số tiền</th>
-                                <th>Chi tiết</th>
-                                <th>Tập tin</th>
-                                <th>Trạng thái</th>
                                 <th>Ngày tạo</th>
-                                <th>Hành động</th>
+                                <th>Trạng thái</th>
+                                <th>Thao tác</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {quotes.map(quote => (
-                                <tr key={quote._id}>
-                                    <td>{quote.jobRequestId}</td>
-                                    <td>{quote.amount.toLocaleString()} VNĐ</td>
-                                    <td>
-                                        <div dangerouslySetInnerHTML={{ __html: quote.details }}></div>
-                                    </td>
-                                    <td>
-                                        {quote.fileUrl && (
-                                            <a 
-                                                href={`http://localhost:5000${quote.fileUrl}`}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                            >
-                                                Xem file
-                                            </a>
+                            {quotes.map(quote => {
+                                const jobRequest = jobRequests.find(req => req.requestId === quote.jobRequestId);
+                                const customer = customers.find(c => jobRequest && c._id === jobRequest.customerId);
+                                
+                                return (
+                                    <React.Fragment key={quote._id}>
+                                        <tr>
+                                            <td>{quote.quoteNumber || `BG-${quote._id.substring(0, 8)}`}</td>
+                                            <td>{customer ? customer.name : 'Khách hàng không xác định'}</td>
+                                            <td>{jobRequest ? jobRequest.title : 'N/A'}</td>
+                                            <td>{formatCurrency(quote.amount)}</td>
+                                            <td>{new Date(quote.createdAt).toLocaleDateString('vi-VN')}</td>
+                                            <td>{getStatusBadge(quote.status)}</td>
+                                            <td>
+                                                <div className="action-buttons">
+                                                    <button
+                                                        className="btn btn-info btn-sm"
+                                                        onClick={() => toggleDetail(quote._id)}
+                                                    >
+                                                        {showDetail === quote._id ? 'Ẩn chi tiết' : 'Xem chi tiết'}
+                                                    </button>
+                                                    <FaEdit
+                                                        onClick={() => handleEdit(quote)}
+                                                        className="action-icon edit"
+                                                        title="Sửa"
+                                                    />
+                                                    <FaTrash
+                                                        onClick={() => handleDelete(quote._id)}
+                                                        className="action-icon delete"
+                                                        title="Xóa"
+                                                    />
+                                                    {quote.file && (
+                                                        <a
+                                                            href={`http://localhost:5000/uploads/${quote.file}`}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="btn btn-secondary btn-sm"
+                                                        >
+                                                            Tải file
+                                                        </a>
+                                                    )}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {showDetail === quote._id && (
+                                            <tr>
+                                                <td colSpan="7">
+                                                    <div className="quote-content">
+                                                        <div dangerouslySetInnerHTML={{ __html: quote.details }} />
+                                                    </div>
+                                                </td>
+                                            </tr>
                                         )}
-                                    </td>
-                                    <td>
-                                        <span className={`status-badge status-${quote.status}`}>
-                                            {STATUS_LABELS[quote.status] || STATUS_LABELS.pending}
-                                        </span>
-                                    </td>
-                                    <td>{new Date(quote.createdAt).toLocaleDateString()}</td>
-                                    <td>
-                                        <div className="action-buttons">
-                                            <FaEdit 
-                                                onClick={() => handleEdit(quote)}
-                                                className="action-icon edit"
-                                                title="Sửa"
-                                            />
-                                            <FaTrash 
-                                                onClick={() => handleDelete(quote._id)}
-                                                className="action-icon delete"
-                                                title="Xóa"
-                                            />
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
+                                    </React.Fragment>
+                                );
+                            })}
                         </tbody>
                     </table>
                 ) : (
@@ -538,11 +632,11 @@ function Quote() {
                                         onChange={(e) => setEditData({...editData, status: e.target.value})}
                                         className="form-select"
                                     >
-                                        {Object.entries(STATUS_LABELS).map(([value, label]) => (
-                                            <option key={value} value={value}>
-                                                {label}
-                                            </option>
-                                        ))}
+                                        <option value="draft">Bản nháp</option>
+                                        <option value="sent">Đã gửi</option>
+                                        <option value="accepted">Đã chấp nhận</option>
+                                        <option value="rejected">Đã từ chối</option>
+                                        <option value="expired">Hết hạn</option>
                                     </select>
                                 </div>
                             </div>

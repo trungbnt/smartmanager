@@ -9,6 +9,7 @@ const reportRoutes = require('./report'); // Thêm route report
 const authRoutes = require('./auth'); // Thêm route auth
 const jobRequestRoutes = require('./jobRequest'); // Thêm route jobRequest
 const auth = require('../middleware/auth');
+const authMiddleware = require('../middleware/authMiddleware');
 
 // Định nghĩa các route cho công việc với phân quyền
 router.post('/jobs', auth(['admin', 'staff']), jobController.createJob);
@@ -16,7 +17,7 @@ router.get('/jobs', auth(['admin', 'staff']), jobController.getJobs);
 
 // Định nghĩa các route cho khách hàng
 router.post('/customers', customerController.createCustomer);
-router.get('/customers', customerController.getCustomers);
+router.get('/customers', authMiddleware(['admin', 'account']), customerController.getCustomers);
 
 // Thêm route cho yêu cầu công việc
 router.use('/job-requests', jobRequestRoutes);

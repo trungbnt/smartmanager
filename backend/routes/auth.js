@@ -11,7 +11,6 @@ const scheduleController = require('../controllers/scheduleController');
 const invoiceController = require('../controllers/invoiceController');
 const reportController = require('../controllers/reportController');
 const User = require('../models/User');
-const authMiddleware = require('../middleware/authMiddleware');
 const auth = require('../middleware/auth');
 const employeeController = require('../controllers/employeeController');
 const equipmentController = require('../controllers/equipmentController');
@@ -72,41 +71,41 @@ router.post('/login', async (req, res) => {
 });
 
 // Route yêu cầu quyền truy cập
-router.get('/customers', authMiddleware(['admin', 'account', 'sales']), customerController.getCustomers);
-router.post('/customers', authMiddleware(['admin', 'account']), customerController.addCustomer);
-router.put('/customers/:id', authMiddleware(['admin', 'account']), customerController.updateCustomer);
-router.delete('/customers/:id', authMiddleware(['admin']), customerController.deleteCustomer);
+router.get('/customers', auth(['admin', 'account', 'sales']), customerController.getCustomers);
+router.post('/customers', auth(['admin', 'account']), customerController.addCustomer);
+router.put('/customers/:id', auth(['admin', 'account']), customerController.updateCustomer);
+router.delete('/customers/:id', auth(['admin']), customerController.deleteCustomer);
 
 // Route cho yêu cầu công việc
-router.get('/job-requests', authMiddleware(['admin', 'account', 'sales', 'customer']), jobRequestController.getJobRequests);
-router.post('/job-requests', authMiddleware(['admin', 'account', 'customer']), jobRequestController.addJobRequest);
-router.put('/job-requests/:id', authMiddleware(['admin', 'account']), jobRequestController.updateJobRequest);
-router.delete('/job-requests/:id', authMiddleware(['admin']), jobRequestController.deleteJobRequest);
+router.get('/job-requests', auth(['admin', 'account', 'sales', 'customer']), jobRequestController.getJobRequests);
+router.post('/job-requests', auth(['admin', 'account', 'customer']), jobRequestController.addJobRequest);
+router.put('/job-requests/:id', auth(['admin', 'account']), jobRequestController.updateJobRequest);
+router.delete('/job-requests/:id', auth(['admin']), jobRequestController.deleteJobRequest);
 
 // Route cho báo giá
-router.post('/quotes', auth(['admin', 'account', 'sales']), upload.single('file'), createQuote);
-router.get('/quotes', auth(['admin', 'sales']), getQuotes);
-router.put('/quotes/:id', auth(['admin', 'sales']), upload.single('file'), updateQuote);
-router.delete('/quotes/:id', auth(['admin', 'sales']), deleteQuote);
+router.get('/quotes', auth(['admin', 'account', 'sales']), getQuotes);
+router.post('/quotes', auth(['admin', 'account']), upload.single('file'), createQuote);
+router.put('/quotes/:id', auth(['admin', 'account']), upload.single('file'), updateQuote);
+router.delete('/quotes/:id', auth(['admin']), deleteQuote);
 router.patch('/quotes/:id/status', auth(['admin']), updateQuoteStatus);
 
 // Route cho lịch trình
-router.get('/schedules', authMiddleware(['admin', 'account', 'sales']), scheduleController.getSchedules);
-router.post('/schedules', authMiddleware(['admin', 'account']), scheduleController.addSchedule);
-router.put('/schedules/:id', authMiddleware(['admin', 'account']), scheduleController.updateSchedule);
-router.delete('/schedules/:id', authMiddleware(['admin']), scheduleController.deleteSchedule);
+router.get('/schedules', auth(['admin', 'account', 'sales']), scheduleController.getSchedules);
+router.post('/schedules', auth(['admin', 'account']), scheduleController.addSchedule);
+router.put('/schedules/:id', auth(['admin', 'account']), scheduleController.updateSchedule);
+router.delete('/schedules/:id', auth(['admin']), scheduleController.deleteSchedule);
 
 // Route cho hóa đơn
-router.get('/invoices', authMiddleware(['admin', 'account']), invoiceController.getInvoices);
-router.post('/invoices', authMiddleware(['admin', 'account']), invoiceController.addInvoice);
-router.put('/invoices/:id', authMiddleware(['admin', 'account']), invoiceController.updateInvoice);
-router.delete('/invoices/:id', authMiddleware(['admin']), invoiceController.deleteInvoice);
+router.get('/invoices', auth(['admin', 'account']), invoiceController.getInvoices);
+router.post('/invoices', auth(['admin', 'account']), invoiceController.addInvoice);
+router.put('/invoices/:id', auth(['admin', 'account']), invoiceController.updateInvoice);
+router.delete('/invoices/:id', auth(['admin']), invoiceController.deleteInvoice);
 
 // Route cho báo cáo
-router.get('/reports', authMiddleware(['admin', 'account']), reportController.getReports);
-router.post('/reports', authMiddleware(['admin', 'account']), reportController.addReport);
-router.put('/reports/:id', authMiddleware(['admin', 'account']), reportController.updateReport);
-router.delete('/reports/:id', authMiddleware(['admin']), reportController.deleteReport);
+router.get('/reports', auth(['admin', 'account']), reportController.getReports);
+router.post('/reports', auth(['admin', 'account']), reportController.addReport);
+router.put('/reports/:id', auth(['admin', 'account']), reportController.updateReport);
+router.delete('/reports/:id', auth(['admin']), reportController.deleteReport);
 
 // Employee routes
 router.post('/employees', auth(['admin']), employeeController.createEmployee);

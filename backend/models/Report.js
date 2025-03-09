@@ -1,31 +1,34 @@
 const mongoose = require('mongoose');
 
 const reportSchema = new mongoose.Schema({
-    month: {
-        type: Number,
+    title: {
+        type: String,
         required: true
     },
-    year: {
-        type: Number,
+    content: {
+        type: String
+    },
+    type: {
+        type: String,
+        enum: ['monthly', 'quarterly', 'yearly'],
         required: true
     },
-    totalRevenue: {
-        type: Number,
-        default: 0
+    startDate: {
+        type: Date,
+        required: true
     },
-    totalExpenses: {
-        type: Number,
-        default: 0
-    },
-    totalJobs: {
-        type: Number,
-        default: 0
+    endDate: {
+        type: Date,
+        required: true
     },
     createdAt: {
         type: Date,
         default: Date.now
+    },
+    createdBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
     }
 });
 
-const Report = mongoose.model('Report', reportSchema);
-module.exports = Report; 
+module.exports = mongoose.model('Report', reportSchema); 

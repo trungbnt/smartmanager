@@ -3,47 +3,69 @@ const JobRequest = require('../models/JobRequest');
 const path = require('path');
 const fs = require('fs');
 
-// Tạo báo giá mới
+// Thêm hàm tạo mã báo giá
+const generateQuoteNumber = async () => {
+    try {
+        // Lấy báo giá mới nhất để tạo mã tiếp theo
+        const latestQuote = await Quote.findOne().sort({ createdAt: -1 });
+        
+        // Định dạng: BG-YYYYMMDD-XXX (XXX là số thứ tự tăng dần)
+        const today = new Date();
+        const dateStr = today.toISOString().slice(0, 10).replace(/-/g, '');
+        
+        let counter = 1;
+        if (latestQuote && latestQuote.quoteNumber) {
+            // Nếu đã có báo giá, lấy số thứ tự từ mã báo giá cuối cùng
+            const parts = latestQuote.quoteNumber.split('-');
+            if (parts.length === 3) {
+                const latestDate = parts[1];
+                const latestCounter = parseInt(parts[2]);
+                
+                // Nếu cùng ngày, tăng counter
+                if (latestDate === dateStr) {
+                    counter = latestCounter + 1;
+                }
+            }
+        }
+        
+        // Định dạng counter thành chuỗi 3 ký tự (001, 002, ...)
+        const counterStr = counter.toString().padStart(3, '0');
+        
+        return `BG-${dateStr}-${counterStr}`;
+    } catch (error) {
+        console.error('Error generating quote number:', error);
+        // Fallback nếu có lỗi
+        return `BG-${Date.now()}`;
+    }
+};
+
+// Tạo báo giá mới - Thêm exports để export hàm này
 exports.createQuote = async (req, res) => {
     try {
-        const { jobRequestId, amount, details } = req.body;
-
-        // Validate required fields
-        if (!jobRequestId || !amount || !details) {
-            return res.status(400).json({
-                message: 'Vui lòng điền đầy đủ thông tin',
-                received: { jobRequestId, amount, details }
-            });
-        }
-
-        // Parse amount to ensure it's a number
-        const parsedAmount = parseFloat(amount);
-        if (isNaN(parsedAmount)) {
-            return res.status(400).json({ message: 'Số tiền không hợp lệ' });
-        }
-
-        // Create quote data
-        const quoteData = {
-            jobRequestId,
-            amount: parsedAmount,
-            details,
-            status: 'pending'
-        };
-
-        // Add file URL if file was uploaded
+        const { jobRequestId, amount, details, status } = req.body;
+        
+        // Tạo mã báo giá tự động
+        const quoteNumber = await generateQuoteNumber();
+        
+        // Lưu file nếu có
+        let fileUrl = null;
         if (req.file) {
-            quoteData.fileUrl = `/uploads/${req.file.filename}`;
+            fileUrl = `/uploads/${req.file.filename}`;
         }
-
-        const quote = new Quote(quoteData);
-        await quote.save();
-        res.status(201).json(quote);
-    } catch (error) {
-        console.error('Quote creation error:', error);
-        res.status(400).json({ 
-            message: 'Không thể tạo báo giá',
-            error: error.message 
+        
+        const newQuote = new Quote({
+            quoteNumber,
+            jobRequestId,
+            amount,
+            details,
+            status: status || 'draft',
+            fileUrl
         });
+        
+        await newQuote.save();
+        res.status(201).json(newQuote);
+    } catch (error) {
+        res.status(400).json({ message: 'Error creating quote', error: error.message });
     }
 };
 
@@ -62,35 +84,57 @@ exports.getQuotes = async (req, res) => {
 exports.updateQuote = async (req, res) => {
     try {
         const { id } = req.params;
-        const { jobRequestId, amount, details, status } = req.body;
+        const { jobRequestId, amount, details, status, validUntil } = req.body;
 
-        // Validate amount if it's being updated
-        if (amount) {
-            const parsedAmount = parseFloat(amount);
-            if (isNaN(parsedAmount)) {
-                return res.status(400).json({ message: 'Số tiền không hợp lệ' });
-            }
-            req.body.amount = parsedAmount;
-        }
-
+        // Tìm báo giá cần cập nhật
         const quote = await Quote.findById(id);
         if (!quote) {
             return res.status(404).json({ message: 'Không tìm thấy báo giá' });
         }
 
-        // Update file if new one is uploaded
+        // Chuẩn bị dữ liệu cập nhật
+        const updateData = {};
+        
+        // Chỉ cập nhật các trường được gửi lên
+        if (jobRequestId) updateData.jobRequestId = jobRequestId;
+        if (amount !== undefined) updateData.amount = parseFloat(amount);
+        if (details) updateData.details = details;
+        if (status) {
+            // Kiểm tra trạng thái hợp lệ
+            if (!['draft', 'sent', 'accepted', 'rejected', 'expired'].includes(status)) {
+                return res.status(400).json({ message: 'Trạng thái không hợp lệ' });
+            }
+            updateData.status = status;
+        }
+        if (validUntil) updateData.validUntil = validUntil;
+
+        // Cập nhật file nếu có file mới
         if (req.file) {
-            req.body.fileUrl = `/uploads/${req.file.filename}`;
+            // Xóa file cũ nếu có
+            if (quote.fileUrl) {
+                const oldFilePath = path.join(__dirname, '..', quote.fileUrl);
+                if (fs.existsSync(oldFilePath)) {
+                    fs.unlinkSync(oldFilePath);
+                }
+            }
+            
+            // Lưu đường dẫn file mới
+            updateData.fileUrl = `/uploads/${req.file.filename}`;
         }
 
-        const updatedQuote = await Quote.findByIdAndUpdate(id, req.body, { 
+        // Cập nhật báo giá trong database
+        const updatedQuote = await Quote.findByIdAndUpdate(id, updateData, { 
             new: true,
             runValidators: true 
         });
+        
         res.json(updatedQuote);
     } catch (error) {
         console.error('Error updating quote:', error);
-        res.status(400).json({ message: 'Không thể cập nhật báo giá' });
+        res.status(400).json({ 
+            message: 'Không thể cập nhật báo giá',
+            error: error.message 
+        });
     }
 };
 
@@ -126,7 +170,8 @@ exports.updateQuoteStatus = async (req, res) => {
         const { id } = req.params;
         const { status } = req.body;
 
-        if (!['pending', 'approved', 'rejected'].includes(status)) {
+        // Kiểm tra trạng thái hợp lệ theo enum mới
+        if (!['draft', 'sent', 'accepted', 'rejected', 'expired'].includes(status)) {
             return res.status(400).json({ message: 'Trạng thái không hợp lệ' });
         }
 
@@ -143,6 +188,9 @@ exports.updateQuoteStatus = async (req, res) => {
         res.json(quote);
     } catch (error) {
         console.error('Error updating quote status:', error);
-        res.status(400).json({ message: 'Không thể cập nhật trạng thái' });
+        res.status(400).json({ 
+            message: 'Không thể cập nhật trạng thái',
+            error: error.message 
+        });
     }
 };

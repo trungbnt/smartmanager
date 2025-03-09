@@ -1,33 +1,65 @@
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');  // Thay đổi import
 
 // Đăng ký người dùng mới
 exports.register = async (req, res) => {
-    const { username, password, role } = req.body;
-    const hashedPassword = bcrypt.hashSync(password, 10); // Mã hóa mật khẩu
-    const newUser = new User({ username, password: hashedPassword, role });
-
     try {
+        const { username, password, role } = req.body;
+        
+        // Kiểm tra user tồn tại
+        const existingUser = await User.findOne({ username });
+        if (existingUser) {
+            return res.status(400).json({ message: 'Username already exists' });
+        }
+
+        // Mã hóa mật khẩu với bcryptjs
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
+
+        const newUser = new User({ 
+            username, 
+            password: hashedPassword, 
+            role 
+        });
+
         await newUser.save();
         res.status(201).json({ message: 'User registered successfully' });
     } catch (error) {
+        console.error('Registration error:', error);
         res.status(500).json({ message: 'Error registering user' });
     }
 };
 
 // Đăng nhập
 exports.login = async (req, res) => {
-    const { username, password } = req.body;
-    const user = await User.findOne({ username });
-    if (!user || !user.comparePassword(password)) {
-        console.log('Invalid credentials'); // Log thông báo lỗi
-        return res.status(401).json({ message: 'Invalid credentials' });
+    try {
+        const { username, password } = req.body;
+        const user = await User.findOne({ username });
+        
+        if (!user) {
+            return res.status(401).json({ message: 'Invalid credentials' });
+        }
+
+        // So sánh mật khẩu với bcryptjs
+        const isValidPassword = await bcrypt.compare(password, user.password);
+        if (!isValidPassword) {
+            return res.status(401).json({ message: 'Invalid credentials' });
+        }
+
+        const token = jwt.sign(
+            { userId: user._id, username: user.username, role: user.role },
+            process.env.JWT_SECRET,
+            { expiresIn: '24h' }
+        );
+
+        res.json({
+            token,
+            username: user.username,
+            role: user.role
+        });
+    } catch (error) {
+        console.error('Login error:', error);
+        res.status(500).json({ message: 'Error during login' });
     }
-    const token = user.generateToken();
-    console.log('Generated Token:', token); // Log token để kiểm tra
-    res.json({
-        token,
-        role: user.role,
-    });
 };

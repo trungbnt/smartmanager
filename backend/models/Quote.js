@@ -1,6 +1,11 @@
 const mongoose = require('mongoose');
 
 const quoteSchema = new mongoose.Schema({
+    quoteNumber: {
+        type: String,
+        required: true,
+        unique: true
+    },
     jobRequestId: {
         type: String,
         required: true
@@ -13,14 +18,21 @@ const quoteSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    status: {
+        type: String,
+        enum: ['draft', 'sent', 'accepted', 'rejected', 'expired'],
+        default: 'draft'
+    },
     fileUrl: {
         type: String
     },
-    status: {
-        type: String,
-        enum: ['pending', 'approved', 'rejected'],
-        default: 'pending'
+    createdAt: {
+        type: Date,
+        default: Date.now
+    },
+    validUntil: {
+        type: Date
     }
-}, { timestamps: true });
+});
 
 module.exports = mongoose.model('Quote', quoteSchema);

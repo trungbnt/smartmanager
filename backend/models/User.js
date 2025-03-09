@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
 const userSchema = new mongoose.Schema({
@@ -14,8 +14,8 @@ const userSchema = new mongoose.Schema({
     },
     role: {
         type: String,
-        enum: ['admin', 'account', 'sales', 'engineering', 'customer'],
-        default: 'customer'
+        enum: ['admin', 'sales', 'engineering', 'account', 'customer'],
+        required: true
     },
     createdAt: {
         type: Date,
@@ -31,15 +31,30 @@ userSchema.pre('save', async function(next) {
     next();
 });
 
-// So sánh mật khẩu
-userSchema.methods.comparePassword = async function(password) {
-    return await bcrypt.compare(password, this.password);
+// Compare password method
+userSchema.methods.comparePassword = async function(candidatePassword) {
+    try {
+        return await bcrypt.compare(candidatePassword, this.password);
+    } catch (error) {
+        throw new Error(error);
+    }
 };
 
-// Phương thức tạo token
+// Generate JWT token method
 userSchema.methods.generateToken = function() {
-    return jwt.sign({ id: this._id, role: this.role }, 'secret_key', { expiresIn: '1h' });
+    if (!process.env.JWT_SECRET) {
+        throw new Error('JWT_SECRET is not configured');
+    }
+    
+    return jwt.sign(
+        { 
+            userId: this._id,
+            username: this.username,
+            role: this.role 
+        },
+        process.env.JWT_SECRET,
+        { expiresIn: '1h' }
+    );
 };
 
-const User = mongoose.model('User', userSchema);
-module.exports = User;
+module.exports = mongoose.model('User', userSchema);
