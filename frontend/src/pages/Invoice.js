@@ -424,7 +424,6 @@ function Invoice() {
             )}
 
             <div className="table-container">
-                <h2>Danh sách hóa đơn</h2>
                 {loading ? (
                     <p>Đang tải...</p>
                 ) : invoices.length > 0 ? (

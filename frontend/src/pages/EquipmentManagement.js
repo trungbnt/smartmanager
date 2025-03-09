@@ -254,7 +254,7 @@ function EquipmentManagement() {
                 ))}
             </div>
 
-            <h1>Quản lý thiết bị</h1>
+            <h1 className="page-title">Quản lý thiết bị</h1>
 
             <div className="table-header">
                 <button onClick={handleAddNew} className="btn btn-primary add-button">
@@ -263,7 +263,6 @@ function EquipmentManagement() {
             </div>
 
             <div className="table-container">
-                <h2>Danh sách thiết bị</h2>
                 {loading ? (
                     <p>Đang tải...</p>
                 ) : equipment.length > 0 ? (

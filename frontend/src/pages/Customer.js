@@ -179,7 +179,7 @@ function Customer() {
                 ))}
             </div>
 
-            <h1>Quản lý khách hàng</h1>
+            <h1 className="page-title">Danh sách khách hàng</h1>
 
             <div className="table-header">
                 <button onClick={() => setShowAddModal(true)} className="btn btn-primary add-button">

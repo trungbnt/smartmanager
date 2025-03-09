@@ -355,7 +355,6 @@ function Report() {
             )}
 
             <div className="table-container">
-                <h2>Danh sách báo cáo</h2>
                 {loading ? (
                     <p>Đang tải...</p>
                 ) : reports.length > 0 ? (

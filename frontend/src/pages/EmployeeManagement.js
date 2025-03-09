@@ -213,7 +213,7 @@ function EmployeeManagement() {
                 ))}
             </div>
 
-            <h1>Quản lý nhân viên</h1>
+            <h1 className="page-title">Quản lý nhân viên</h1>
 
             <div className="table-header">
                 <button onClick={handleAddNew} className="btn btn-primary add-button">

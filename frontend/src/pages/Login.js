@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import Notification from '../components/Notification';
+import '../styles/auth.css'
 import '../styles/pages.css';
 
 const Login = ({ onLogin }) => {

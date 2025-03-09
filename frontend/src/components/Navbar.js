@@ -1,8 +1,16 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import { FaBars, FaTimes } from 'react-icons/fa'; // Import icons
 import '../styles/navbar.css';
 
-function Navbar({ userRole, onLogout }) {
+function Navbar({ userRole, username, onLogout }) {
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const location = useLocation();
+
+    const toggleMenu = () => {
+        setIsMenuOpen(!isMenuOpen);
+    };
+
     // Định nghĩa menu theo role
     const menuItems = {
         admin: [
@@ -39,18 +47,31 @@ function Navbar({ userRole, onLogout }) {
 
     return (
         <nav className="navbar">
+            <button className="mobile-menu-btn" onClick={toggleMenu}>
+                {isMenuOpen ? <FaTimes /> : <FaBars />}
+            </button>
+            
             <div className="nav-brand">
-                <Link to="/">Logo</Link>
+                <Link to="/">Smart Manager</Link>
             </div>
-            <ul className="nav-menu">
+            
+            <ul className={`nav-menu ${isMenuOpen ? 'mobile-open' : ''}`}>
                 {currentMenuItems.map((item, index) => (
-                    <li key={index} className="nav-item">
+                    <li 
+                        key={index} 
+                        className={`nav-item ${location.pathname === item.path ? 'active' : ''}`}
+                        onClick={() => setIsMenuOpen(false)} // Close menu when item clicked
+                    >
                         <Link to={item.path}>{item.label}</Link>
                     </li>
                 ))}
             </ul>
+            
             <div className="nav-right">
-                <span className="user-role">{userRole}</span>
+                <div className="welcome-message">
+                    <span>Xin chào, {username}!</span>
+                    <span className="user-role">{userRole}</span>
+                </div>
                 <button onClick={onLogout} className="logout-btn">
                     Đăng xuất
                 </button>
@@ -59,4 +80,4 @@ function Navbar({ userRole, onLogout }) {
     );
 }
 
-export default Navbar; 
+export default Navbar;
