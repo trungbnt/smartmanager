@@ -1,8 +1,5 @@
 const express = require('express');
 const router = express.Router();
-const multer = require('multer');
-const path = require('path');
-const fs = require('fs');
 const authController = require('../controllers/authController');
 const customerController = require('../controllers/customerController');
 const jobRequestController = require('../controllers/jobRequestController');
@@ -14,44 +11,7 @@ const User = require('../models/User');
 const auth = require('../middleware/auth');
 const employeeController = require('../controllers/employeeController');
 const equipmentController = require('../controllers/equipmentController');
-
-// Configure multer for file uploads
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        const uploadDir = path.join(__dirname, '../uploads');
-        if (!fs.existsSync(uploadDir)) {
-            fs.mkdirSync(uploadDir, { recursive: true });
-        }
-        cb(null, uploadDir);
-    },
-    filename: (req, file, cb) => {
-        // Get the file name without extension
-        const fileName = path.parse(file.originalname).name;
-        // Get the file extension
-        const fileExt = path.extname(file.originalname);
-        // Create unique suffix
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        // Combine original filename with unique suffix
-        cb(null, `${fileName}-${uniqueSuffix}${fileExt}`);
-    }
-});
-
-const upload = multer({
-    storage: storage,
-    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
-    fileFilter: (req, file, cb) => {
-        const allowedTypes = [
-            'application/pdf',
-            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-        ];
-        if (allowedTypes.includes(file.mimetype)) {
-            cb(null, true);
-        } else {
-            cb(new Error('Invalid file type'), false);
-        }
-    }
-});
+const cloudinary = require('cloudinary').v2;
 
 // Đăng ký người dùng mới
 router.post('/register', authController.register);
@@ -84,8 +44,70 @@ router.delete('/job-requests/:id', auth(['admin']), jobRequestController.deleteJ
 
 // Route cho báo giá
 router.get('/quotes', auth(['admin', 'account', 'sales']), getQuotes);
-router.post('/quotes', auth(['admin', 'account']), upload.single('file'), createQuote);
-router.put('/quotes/:id', auth(['admin', 'account']), upload.single('file'), updateQuote);
+router.post('/quotes', auth(['admin', 'account']), async (req, res) => {
+    try {
+        await new Promise((resolve, reject) => {
+            req.app.locals.upload.single('file')(req, res, (err) => {
+                if (err) return reject(err);
+                resolve();
+            });
+        });
+
+        const file = req.file;
+        let fileUrl = null;
+
+        if (file) {
+            const result = await new Promise((resolve, reject) => {
+                const stream = cloudinary.uploader.upload_stream(
+                    { resource_type: 'auto' },
+                    (error, result) => {
+                        if (error) reject(error);
+                        else resolve(result);
+                    }
+                );
+                stream.end(file.buffer);
+            });
+            fileUrl = result.secure_url;
+        }
+
+        await createQuote(req, res, fileUrl);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error uploading file to Cloudinary' });
+    }
+});
+router.put('/quotes/:id', auth(['admin', 'account']), async (req, res) => {
+    try {
+        await new Promise((resolve, reject) => {
+            req.app.locals.upload.single('file')(req, res, (err) => {
+                if (err) return reject(err);
+                resolve();
+            });
+        });
+
+        const file = req.file;
+        let fileUrl = null;
+
+        if (file) {
+            const result = await new Promise((resolve, reject) => {
+                const stream = cloudinary.uploader.upload_stream(
+                    { resource_type: 'auto' },
+                    (error, result) => {
+                        if (error) reject(error);
+                        else resolve(result);
+                    }
+                );
+                stream.end(file.buffer);
+            });
+            fileUrl = result.secure_url;
+        }
+
+        await updateQuote(req, res, fileUrl);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error uploading file to Cloudinary' });
+    }
+});
 router.delete('/quotes/:id', auth(['admin']), deleteQuote);
 router.patch('/quotes/:id/status', auth(['admin']), updateQuoteStatus);
 

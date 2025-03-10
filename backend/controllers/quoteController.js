@@ -1,7 +1,5 @@
 const Quote = require('../models/Quote');
 const JobRequest = require('../models/JobRequest');
-const path = require('path');
-const fs = require('fs');
 
 // Thêm hàm tạo mã báo giá
 const generateQuoteNumber = async () => {
@@ -39,19 +37,13 @@ const generateQuoteNumber = async () => {
     }
 };
 
-// Tạo báo giá mới - Thêm exports để export hàm này
-exports.createQuote = async (req, res) => {
+// Tạo báo giá mới
+exports.createQuote = async (req, res, fileUrl) => {
     try {
         const { jobRequestId, amount, details, status } = req.body;
         
         // Tạo mã báo giá tự động
         const quoteNumber = await generateQuoteNumber();
-        
-        // Lưu file nếu có
-        let fileUrl = null;
-        if (req.file) {
-            fileUrl = `/uploads/${req.file.filename}`;
-        }
         
         const newQuote = new Quote({
             quoteNumber,
@@ -59,7 +51,7 @@ exports.createQuote = async (req, res) => {
             amount,
             details,
             status: status || 'draft',
-            fileUrl
+            fileUrl: fileUrl || null // Sử dụng URL từ Cloudinary nếu có
         });
         
         await newQuote.save();
@@ -81,7 +73,7 @@ exports.getQuotes = async (req, res) => {
 };
 
 // Cập nhật báo giá
-exports.updateQuote = async (req, res) => {
+exports.updateQuote = async (req, res, fileUrl) => {
     try {
         const { id } = req.params;
         const { jobRequestId, amount, details, status, validUntil } = req.body;
@@ -108,18 +100,9 @@ exports.updateQuote = async (req, res) => {
         }
         if (validUntil) updateData.validUntil = validUntil;
 
-        // Cập nhật file nếu có file mới
-        if (req.file) {
-            // Xóa file cũ nếu có
-            if (quote.fileUrl) {
-                const oldFilePath = path.join(__dirname, '..', quote.fileUrl);
-                if (fs.existsSync(oldFilePath)) {
-                    fs.unlinkSync(oldFilePath);
-                }
-            }
-            
-            // Lưu đường dẫn file mới
-            updateData.fileUrl = `/uploads/${req.file.filename}`;
+        // Cập nhật fileUrl nếu có
+        if (fileUrl) {
+            updateData.fileUrl = fileUrl;
         }
 
         // Cập nhật báo giá trong database
@@ -148,14 +131,7 @@ exports.deleteQuote = async (req, res) => {
             return res.status(404).json({ message: 'Không tìm thấy báo giá' });
         }
 
-        // Delete associated file if exists
-        if (quote.fileUrl) {
-            const filePath = path.join(__dirname, '..', quote.fileUrl);
-            if (fs.existsSync(filePath)) {
-                fs.unlinkSync(filePath);
-            }
-        }
-
+        // Không cần xóa file cục bộ nữa vì file được lưu trên Cloudinary
         await quote.deleteOne();
         res.json({ message: 'Xóa báo giá thành công' });
     } catch (error) {
