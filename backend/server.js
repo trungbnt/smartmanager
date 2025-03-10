@@ -46,7 +46,7 @@ const upload = multer({
 app.locals.upload = upload;
 
 // Kết nối đến cơ sở dữ liệu MongoDB
-const mongoURI = 'mongodb+srv://trungcr:Bm@PjFRequYd5.r@smartmanager.xrsyb.mongodb.net/smart_manager';
+const mongoURI = process.env.MONGODB_URI;
 
 mongoose.connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true })
     .then(() => console.log('MongoDB connected'))
@@ -56,7 +56,12 @@ mongoose.connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true })
 app.use(bodyParser.json());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(cors());
+app.use(cors({
+    origin: ['https://smartmanager-sigma.vercel.app'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
 app.use('/api', routes);
 app.use('/api/auth', authRoutes);
 
@@ -92,3 +97,5 @@ app.use((err, req, res, next) => {
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
 });
+
+module.exports = app;
