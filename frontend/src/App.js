@@ -16,6 +16,8 @@ import Schedule from './pages/Schedule';
 import Invoice from './pages/Invoice';
 import Report from './pages/Report';
 import Navbar from './components/Navbar';
+import Profile from './pages/Profile';
+import ProfileEdit from './pages/ProfileEdit';
 
 const App = () => {
     const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
@@ -125,6 +127,19 @@ const App = () => {
                         <Route path="/equipment" element={
                             isAuthenticated && ['admin', 'engineering'].includes(userRole) ? 
                             <EquipmentManagement /> : 
+                            <Navigate to="/login" replace />
+                        } />
+
+                        {/* Add Profile Routes */}
+                        <Route path="/profile" element={
+                            isAuthenticated ? 
+                            <Profile /> : 
+                            <Navigate to="/login" replace />
+                        } />
+                        
+                        <Route path="/profile/edit" element={
+                            isAuthenticated ? 
+                            <ProfileEdit /> : 
                             <Navigate to="/login" replace />
                         } />
                     </Routes>

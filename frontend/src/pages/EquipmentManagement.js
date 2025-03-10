@@ -336,7 +336,14 @@ function EquipmentManagement() {
             {showAddModal && (
                 <div className="overlay">
                     <div className="modal">
-                        <h3>Thêm thiết bị mới</h3>
+                        <div className="modal-header">
+                            <h3>Thêm thiết bị mới</h3>
+                            <FaTimes
+                                className="close-icon"
+                                onClick={() => setShowAddModal(false)}
+                                title="Đóng"
+                            />
+                        </div>
                         <form onSubmit={handleSubmit} className="form-container">
                             <div className="form-row">
                                 <div className="form-group">
@@ -451,7 +458,26 @@ function EquipmentManagement() {
             {editingId && (
                 <div className="overlay">
                     <div className="modal">
-                        <h3>Chỉnh sửa thiết bị</h3>
+                        <div className="modal-header">
+                            <h3>Chỉnh sửa thiết bị</h3>
+                            <FaTimes
+                                className="close-icon"
+                                onClick={() => {
+                                    setEditingId(null);
+                                    setFormData({
+                                        type: '',
+                                        model: '',
+                                        capacity: '',
+                                        licensePlate: '',
+                                        purchaseDate: '',
+                                        registrationExpiry: '',
+                                        insuranceExpiry: '',
+                                        status: 'available'
+                                    });
+                                }}
+                                title="Đóng"
+                            />
+                        </div>
                         <form className="form-container">
                             <div className="form-row">
                                 <div className="form-group">

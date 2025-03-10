@@ -9,6 +9,7 @@ const Login = ({ onLogin }) => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
+    const [rememberMe, setRememberMe] = useState(false);
     const [notifications, setNotifications] = useState([]);
     const navigate = useNavigate();
     const timeoutRefs = useRef(new Map());
@@ -47,6 +48,17 @@ const Login = ({ onLogin }) => {
         };
     }, []);
 
+    useEffect(() => {
+        // Check for saved credentials
+        const savedCredentials = localStorage.getItem('savedCredentials');
+        if (savedCredentials) {
+            const { username, password } = JSON.parse(savedCredentials);
+            setUsername(username);
+            setPassword(password);
+            setRememberMe(true);
+        }
+    }, []);
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
@@ -57,9 +69,23 @@ const Login = ({ onLogin }) => {
             });
 
             if (response.data.token) {
+                // Handle Remember Me
+                if (rememberMe) {
+                    // Store credentials securely as JSON string
+                    localStorage.setItem('savedCredentials', JSON.stringify({ 
+                        username, 
+                        password 
+                    }));
+                } else {
+                    // Clear saved credentials if "Remember Me" is unchecked
+                    localStorage.removeItem('savedCredentials');
+                }
+
+                // Store auth token
                 localStorage.setItem('token', `Bearer ${response.data.token}`);
+                localStorage.setItem('userRole', response.data.role);
+                localStorage.setItem('username', response.data.username || username);
                 
-                // Call onLogin with complete user data
                 onLogin({
                     role: response.data.role,
                     username: response.data.username || username // Use input username as fallback
@@ -69,14 +95,68 @@ const Login = ({ onLogin }) => {
             }
         } catch (error) {
             console.error('Login error:', error);
-            addNotification('Login failed', 'error');
+            addNotification('Đăng nhập không thành công', 'error');
         } finally {
             setLoading(false);
         }
     };
 
+
     return (
-        <div className="login-container">
+        <div className="auth-container">
+            <div className="auth-box">
+                <h2>Đăng nhập</h2>
+                <form onSubmit={handleSubmit}>
+                    <div className="form-group">
+                        <label htmlFor="username">Tên đăng nhập:</label>
+                        <input
+                            type="text"
+                            id="username"
+                            value={username}
+                            onChange={(e) => setUsername(e.target.value)}
+                            required
+                            className="form-control"
+                        />
+                    </div>
+                    <div className="form-group">
+                        <label htmlFor="password">Mật khẩu:</label>
+                        <input
+                            type="password"
+                            id="password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            required
+                            className="form-control"
+                        />
+                    </div>
+                    <div className="form-group checkbox-group">
+                        <label className="checkbox-label">
+                            <input
+                                type="checkbox"
+                                checked={rememberMe}
+                                onChange={(e) => setRememberMe(e.target.checked)}
+                            />
+                            <span>Nhớ mật khẩu</span>
+                        </label>
+                    </div>
+                    <div className="button-group auth-buttons">
+                        <button 
+                            type="submit" 
+                            className="btn-auth btn-login"
+                            disabled={loading}
+                        >
+                            {loading ? 'Đang xử lý...' : 'Đăng nhập'}
+                        </button>
+                        <button 
+                            type="button" 
+                            className="btn-auth btn-register"
+                            onClick={() => navigate('/register')}
+                        >
+                            Đăng ký
+                        </button>
+                    </div>
+                </form>
+            </div>
             <div className="notifications-container">
                 {notifications.map(note => (
                     <Notification
@@ -87,37 +167,6 @@ const Login = ({ onLogin }) => {
                     />
                 ))}
             </div>
-
-            <h2>Đăng nhập</h2>
-            <form onSubmit={handleSubmit}>
-                <div className="form-group">
-                    <label htmlFor="username">Tên đăng nhập:</label>
-                    <input
-                        type="text"
-                        id="username"
-                        value={username}
-                        onChange={(e) => setUsername(e.target.value)}
-                        required
-                    />
-                </div>
-                <div className="form-group">
-                    <label htmlFor="password">Mật khẩu:</label>
-                    <input
-                        type="password"
-                        id="password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                    />
-                </div>
-                <button 
-                    type="submit" 
-                    className="btn btn-primary"
-                    disabled={loading}
-                >
-                    {loading ? 'Đang xử lý...' : 'Đăng nhập'}
-                </button>
-            </form>
         </div>
     );
 };

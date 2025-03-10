@@ -311,12 +311,11 @@ function Schedule() {
                     <div className="modal">
                         <div className="modal-header">
                             <h3>Tạo lịch trình mới</h3>
-                            <button 
-                                className="close-button"
+                            <FaTimes
+                                className="close-icon"
                                 onClick={() => setShowAddModal(false)}
-                            >
-                                <FaTimes />
-                            </button>
+                                title="Đóng"
+                            />
                         </div>
                         <form className="form-container">
                             <div className="form-row">
@@ -419,12 +418,11 @@ function Schedule() {
                     <div className="modal">
                         <div className="modal-header">
                             <h3>Chỉnh sửa lịch trình</h3>
-                            <button 
-                                className="close-button"
+                            <FaTimes
+                                className="close-icon"
                                 onClick={handleCancelEdit}
-                            >
-                                <FaTimes />
-                            </button>
+                                title="Đóng"
+                            />
                         </div>
                         <form className="form-container">
                             <div className="form-row">

@@ -1,15 +1,25 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { FaBars, FaTimes } from 'react-icons/fa'; // Import icons
+import { FaBars, FaTimes, FaUser, FaSignOutAlt, FaCaretDown } from 'react-icons/fa';
 import '../styles/navbar.css';
 
 function Navbar({ userRole, username, onLogout }) {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const location = useLocation();
+    const dropdownRef = useRef(null);
 
-    const toggleMenu = () => {
-        setIsMenuOpen(!isMenuOpen);
-    };
+    // Close dropdown when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+                setIsDropdownOpen(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
 
     // Định nghĩa menu theo role
     const menuItems = {
@@ -47,7 +57,7 @@ function Navbar({ userRole, username, onLogout }) {
 
     return (
         <nav className="navbar">
-            <button className="mobile-menu-btn" onClick={toggleMenu}>
+            <button className="mobile-menu-btn" onClick={() => setIsMenuOpen(!isMenuOpen)}>
                 {isMenuOpen ? <FaTimes /> : <FaBars />}
             </button>
             
@@ -60,21 +70,35 @@ function Navbar({ userRole, username, onLogout }) {
                     <li 
                         key={index} 
                         className={`nav-item ${location.pathname === item.path ? 'active' : ''}`}
-                        onClick={() => setIsMenuOpen(false)} // Close menu when item clicked
+                        onClick={() => setIsMenuOpen(false)}
                     >
                         <Link to={item.path}>{item.label}</Link>
                     </li>
                 ))}
             </ul>
             
-            <div className="nav-right">
-                <div className="welcome-message">
-                    <span>Xin chào, {username}!</span>
-                    <span className="user-role">{userRole}</span>
+            <div className="nav-right" ref={dropdownRef}>
+                <div 
+                    className="welcome-message"
+                    onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                >
+                    <span>Xin chào, {username}</span>
+                    <FaCaretDown className={`dropdown-icon ${isDropdownOpen ? 'open' : ''}`} />
+                    
+                    {isDropdownOpen && (
+                        <div className="dropdown-menu">
+                            <Link to="/profile" className="dropdown-item">
+                                <FaUser /> Xem thông tin
+                            </Link>
+                            <Link to="/profile/edit" className="dropdown-item">
+                                <FaUser /> Chỉnh sửa thông tin
+                            </Link>
+                            <button onClick={onLogout} className="dropdown-item">
+                                <FaSignOutAlt /> Đăng xuất
+                            </button>
+                        </div>
+                    )}
                 </div>
-                <button onClick={onLogout} className="logout-btn">
-                    Đăng xuất
-                </button>
             </div>
         </nav>
     );

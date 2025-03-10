@@ -438,7 +438,7 @@
     position: fixed;
     top: 20px;
     right: 20px;
-    z-index: 1000;
+    z-index: var(--z-index-notification);
 }
 
 .notification {
@@ -754,20 +754,29 @@
     right: 0;
     bottom: 0;
     background: rgba(0, 0, 0, 0.5);
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    display: grid;
+    place-items: center;
+    z-index: var(--z-index-overlay);
 }
 
 .modal {
     background: white;
     padding: 2rem;
     border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    max-width: 400px;
     width: 90%;
-    max-width: 800px;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--background-primary);
+    box-shadow: var(--shadow-lg);
+    max-width: 500px;
+    z-index: var(--z-index-modal);
     max-height: 90vh;
     overflow-y: auto;
-    position: relative;
+    margin: 2rem auto;
 }
 
 .modal h3 {
@@ -916,11 +925,12 @@ td .status-badge {
     cursor: pointer;
     font-size: 1.2rem;
     color: #666;
-    transition: color 0.2s;
+    transition: color 0.2s ease;
 }
 
 .close-icon:hover {
     color: #dc3545;
+    transform: scale(1.1);
 }
 
 /* Thêm class status-yellow cho trạng thái "chờ xử lý" */
@@ -1191,4 +1201,163 @@ td .status-badge {
 .status-badge:hover {
     transform: translateY(-1px);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Modal/Popup Base Styles */
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: grid;
+    place-items: center;
+    z-index: var(--z-index-overlay);
+}
+
+.modal,
+.popup,
+.logout-confirm {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--background-primary);
+    padding: 2.5rem;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-lg);
+    width: 90%;
+    max-width: 800px; /* Tăng max-width lên */
+    z-index: var(--z-index-modal);
+    max-height: 85vh;
+    overflow-y: auto;
+}
+
+/* Modal Header */
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--background-secondary);
+}
+
+.modal-header h3 {
+    margin: 0;
+    font-size: 1.5rem;
+    color: var(--text-primary);
+}
+
+/* Button Group */
+.button-group {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+    margin-top: 1.5rem;
+}
+
+/* Responsive Styles */
+@media screen and (max-width: 1200px) {
+    .modal,
+    .popup,
+    .logout-confirm {
+        max-width: 700px;
+    }
+}
+
+@media screen and (max-width: 992px) {
+    .modal,
+    .popup,
+    .logout-confirm {
+        max-width: 600px;
+        width: 85%;
+    }
+}
+
+@media screen and (max-width: 768px) {
+    .modal,
+    .popup,
+    .logout-confirm {
+        max-width: 500px;
+        width: 90%;
+        padding: 1.5rem;
+    }
+}
+
+@media screen and (max-width: 576px) {
+    .modal,
+    .popup,
+    .logout-confirm {
+        width: 95%;
+        padding: 1.25rem;
+        max-height: 90vh;
+    }
+
+    .button-group {
+        flex-direction: column;
+    }
+
+    .button-group button {
+        width: 100%;
+    }
+}
+
+/* Landscape Mode */
+@media screen and (max-height: 500px) and (orientation: landscape) {
+    .modal,
+    .popup,
+    .logout-confirm {
+        max-height: 95vh;
+        top: 2.5vh;
+        transform: translateX(-50%);
+    }
+}
+
+/* Profile Styles */
+.profile-content {
+    background: white;
+    border-radius: var(--border-radius);
+    padding: 2rem;
+    box-shadow: var(--shadow-sm);
+}
+
+.profile-section {
+    margin-bottom: 2rem;
+}
+
+.profile-section h3 {
+    color: var(--text-primary);
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.info-group {
+    display: flex;
+    margin-bottom: 1rem;
+    padding: 0.5rem 0;
+}
+
+.info-group label {
+    font-weight: 500;
+    width: 200px;
+    color: var(--text-secondary);
+}
+
+.info-group span {
+    color: var(--text-primary);
+}
+
+/* Responsive Design */
+@media screen and (max-width: 768px) {
+    .info-group {
+        flex-direction: column;
+    }
+
+    .info-group label {
+        width: 100%;
+        margin-bottom: 0.25rem;
+    }
 }

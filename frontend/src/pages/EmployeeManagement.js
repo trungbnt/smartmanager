@@ -277,7 +277,14 @@ function EmployeeManagement() {
             {showAddModal && (
                 <div className="overlay">
                     <div className="modal">
-                        <h3>Thêm nhân viên mới</h3>
+                        <div className="modal-header">
+                            <h3>Thêm nhân viên mới</h3>
+                            <FaTimes
+                                className="close-icon"
+                                onClick={() => setShowAddModal(false)}
+                                title="Đóng"
+                            />
+                        </div>
                         <form onSubmit={handleSubmit} className="form-container">
                             <div className="form-row">
                                 <div className="form-group" style={{ flex: 1 }}>
@@ -390,7 +397,17 @@ function EmployeeManagement() {
             {editingId && (
                 <div className="overlay">
                     <div className="modal">
-                        <h3>Chỉnh sửa thông tin nhân viên</h3>
+                        <div className="modal-header">
+                            <h3>Chỉnh sửa thông tin nhân viên</h3>
+                            <FaTimes
+                                className="close-icon"
+                                onClick={() => {
+                                    setEditingId(null);
+                                    setPhoneError('');
+                                }}
+                                title="Đóng"
+                            />
+                        </div>
                         <form className="form-container">
                             <div className="form-row">
                                 <div className="form-group" style={{ flex: 1 }}>

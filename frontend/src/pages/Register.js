@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import Notification from '../components/Notification';
+import '../styles/auth.css';
 import '../styles/pages.css';
 
 function Register() {
@@ -34,9 +35,8 @@ function Register() {
                 role 
             });
             addNotification('Đăng ký thành công! Bạn có thể đăng nhập ngay.');
-            // Chuyển hướng đến trang đăng nhập sau 2 giây
             setTimeout(() => {
-                handleSuccess();
+                navigate('/login');
             }, 2000);
         } catch (error) {
             console.error('Error during registration:', error);
@@ -44,15 +44,72 @@ function Register() {
         } finally {
             setLoading(false);
         }
-        navigate('/login');
-    };
-
-    const handleSuccess = () => {
-        navigate('/login');
     };
 
     return (
-        <div className="page-container">
+        <div className="auth-container">
+            <div className="auth-box">
+                <h2>Đăng ký tài khoản</h2>
+                <form onSubmit={handleSubmit}>
+                    <div className="form-group">
+                        <label htmlFor="username">Tên đăng nhập:</label>
+                        <input
+                            type="text"
+                            id="username"
+                            value={username}
+                            onChange={(e) => setUsername(e.target.value)}
+                            required
+                            className="form-control"
+                        />
+                    </div>
+
+                    <div className="form-group">
+                        <label htmlFor="password">Mật khẩu:</label>
+                        <input
+                            type="password"
+                            id="password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            required
+                            className="form-control"
+                        />
+                    </div>
+
+                    <div className="form-group">
+                        <label htmlFor="role">Vai trò:</label>
+                        <select
+                            id="role"
+                            value={role}
+                            onChange={(e) => setRole(e.target.value)}
+                            className="form-control"
+                        >
+                            <option value="customer">Khách hàng</option>
+                            <option value="account">Kế toán</option>
+                            <option value="sales">Bán hàng</option>
+                            <option value="engineering">Kỹ thuật</option>
+                            <option value="admin">Quản trị viên</option>
+                        </select>
+                    </div>
+
+                    <div className="button-group auth-buttons">
+                        <button
+                            type="submit"
+                            className="btn-auth btn-login"
+                            disabled={loading}
+                        >
+                            {loading ? 'Đang xử lý...' : 'Đăng ký'}
+                        </button>
+                    </div>
+
+                    <div className="auth-links">
+                        <p>
+                            Đã có tài khoản?{' '}
+                            <Link to="/login">Đăng nhập tại đây</Link>
+                        </p>
+                    </div>
+                </form>
+            </div>
+            
             <div className="notifications-container">
                 {notifications.map(note => (
                     <Notification
@@ -63,53 +120,6 @@ function Register() {
                     />
                 ))}
             </div>
-
-            <h1 className="page-title">Đăng ký</h1>
-            
-            <form onSubmit={handleSubmit} className="form-container">
-                <div className="form-group">
-                    <label>Tên đăng nhập:</label>
-                    <input 
-                        type="text" 
-                        value={username} 
-                        onChange={(e) => setUsername(e.target.value)} 
-                        required 
-                    />
-                </div>
-
-                <div className="form-group">
-                    <label>Mật khẩu:</label>
-                    <input 
-                        type="password" 
-                        value={password} 
-                        onChange={(e) => setPassword(e.target.value)} 
-                        required 
-                    />
-                </div>
-
-                <div className="form-group">
-                    <label>Vai trò:</label>
-                    <select 
-                        value={role} 
-                        onChange={(e) => setRole(e.target.value)}
-                        className="form-select"
-                    >
-                        <option value="customer">Khách hàng</option>
-                        <option value="account">Kế toán</option>
-                        <option value="sales">Bán hàng</option>
-                        <option value="engineering">Kỹ thuật</option>
-                        <option value="admin">Quản trị viên</option>
-                    </select>
-                </div>
-
-                <button 
-                    type="submit" 
-                    className="btn" 
-                    disabled={loading}
-                >
-                    {loading ? 'Đang xử lý...' : 'Đăng ký'}
-                </button>
-            </form>
         </div>
     );
 }
