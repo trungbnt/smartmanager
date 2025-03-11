@@ -14,10 +14,11 @@
   --shadow-lg: 0 10px 15px rgba(0,0,0,0.1);
   --transition: all 0.3s ease;
   /* Add z-index variables for consistent layering */
-  --z-index-navbar: 100;
-  --z-index-modal: 1000;
-  --z-index-overlay: 999;
-  --z-index-notification: 1100;
+  --z-index-navbar: 1100;
+  --z-index-dropdown: 1200;
+  --z-index-modal: 1100;
+  --z-index-overlay: 1050;
+  --z-index-notification: 1300;
 }
 
 * {

@@ -5,8 +5,8 @@ const routes = require('./routes');
 const authRoutes = require('./routes/auth');
 const cors = require('cors');
 const multer = require('multer');
-const cloudinary = require('cloudinary').v2; // Thêm Cloudinary
-require('dotenv').config(); // Thêm dotenv để tải biến môi trường
+const cloudinary = require('cloudinary').v2;
+require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -56,10 +56,24 @@ mongoose.connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true })
 app.use(bodyParser.json());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+// Cấu hình CORS linh hoạt
+const allowedOrigins = [
+    'http://localhost:3000', // Cho phép khi chạy trên localhost
+    process.env.FRONTEND_URL // URL frontend khi deploy trên Vercel, cấu hình trong .env hoặc Vercel dashboard
+].filter(Boolean); // Lọc bỏ các giá trị undefined
+
 app.use(cors({
-    origin: ['https://smartmanager-sigma.vercel.app'],
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    allowedHeaders: ['Content-Type', 'Authorization']
+    origin: (origin, callback) => {
+        // Cho phép yêu cầu không có origin (như Postman) hoặc origin nằm trong danh sách được phép
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true
 }));
 
 app.use('/api', routes);
@@ -94,8 +108,12 @@ app.use((err, req, res, next) => {
     });
 });
 
-app.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
-});
+// Chạy server trên localhost
+if (process.env.NODE_ENV !== 'production') {
+    const PORT = process.env.PORT || 5000;
+    app.listen(PORT, () => {
+        console.log(`Server is running on http://localhost:${PORT}`);
+    });
+}
 
 module.exports = app;
