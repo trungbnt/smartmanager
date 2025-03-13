@@ -38,11 +38,13 @@ function Invoice() {
         }, 5000);
     }, [removeNotification]);
 
+    
+    const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
     const fetchInvoices = useCallback(async () => {
         try {
             setLoading(true);
             const token = localStorage.getItem('token');
-            const response = await axios.get('http://localhost:5000/api/auth/invoices', {
+            const response = await axios.get(`${API_URL}/api/auth/invoices`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setInvoices(response.data);
@@ -51,43 +53,43 @@ function Invoice() {
         } finally {
             setLoading(false);
         }
-    }, [addNotification]);
+    }, [addNotification, API_URL]);
 
     const fetchCustomers = useCallback(async () => {
         try {
             const token = localStorage.getItem('token');
-            const response = await axios.get('http://localhost:5000/api/auth/customers', {
+            const response = await axios.get(`${API_URL}/api/auth/customers`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setCustomers(response.data);
         } catch (err) {
             addNotification('Không thể tải danh sách khách hàng', 'error');
         }
-    }, [addNotification]);
+    }, [addNotification, API_URL]);
 
     const fetchQuotes = useCallback(async () => {
         try {
             const token = localStorage.getItem('token');
-            const response = await axios.get('http://localhost:5000/api/auth/quotes', {
+            const response = await axios.get(`${API_URL}/api/auth/quotes`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setQuotes(response.data);
         } catch (err) {
             addNotification('Không thể tải danh sách báo giá', 'error');
         }
-    }, [addNotification]);
+    }, [addNotification, API_URL]);
 
     const fetchJobRequests = useCallback(async () => {
         try {
             const token = localStorage.getItem('token');
-            const response = await axios.get('http://localhost:5000/api/auth/job-requests', {
+            const response = await axios.get(`${API_URL}/api/auth/job-requests`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setJobRequests(response.data);
         } catch (err) {
             addNotification('Không thể tải danh sách yêu cầu công việc', 'error');
         }
-    }, [addNotification]);
+    }, [addNotification, API_URL]);
 
     useEffect(() => {
         fetchInvoices();
@@ -130,7 +132,7 @@ function Invoice() {
             };
             
             const token = localStorage.getItem('token');
-            await axios.post('http://localhost:5000/api/auth/invoices', dataToSend, {
+            await axios.post(`${API_URL}/api/auth/invoices`, dataToSend, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             
@@ -267,7 +269,7 @@ function Invoice() {
             
             const token = localStorage.getItem('token');
             const response = await axios.put(
-                `http://localhost:5000/api/auth/invoices/${id}`,
+                `${API_URL}/api/auth/invoices/${id}`,
                 editData,
                 {
                     headers: {
@@ -304,7 +306,7 @@ function Invoice() {
         try {
             setLoading(true);
             const token = localStorage.getItem('token');
-            await axios.delete(`http://localhost:5000/api/auth/invoices/${deleteId}`, {
+            await axios.delete(`${API_URL}/api/auth/invoices/${deleteId}`, {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }

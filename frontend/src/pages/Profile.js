@@ -14,12 +14,13 @@ function Profile() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const navigate = useNavigate();
-
+    
+    const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
     useEffect(() => {
         const fetchUserData = async () => {
             try {
                 const token = localStorage.getItem('token');
-                const response = await axios.get('http://localhost:5000/api/users/profile', {
+                const response = await axios.get(`${API_URL}/api/users/profile`, {
                     headers: {
                         Authorization: `Bearer ${token}`
                     },
@@ -43,7 +44,7 @@ function Profile() {
             }
         };
         fetchUserData();
-    }, [navigate]);
+    }, [navigate, API_URL]);
 
     if (loading) {
         return <div>Loading...</div>;

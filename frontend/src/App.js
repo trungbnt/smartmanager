@@ -45,7 +45,7 @@ const App = () => {
         setUsername(null);
         setIsAuthenticated(false);
         setShowLogoutConfirm(false);
-        window.location.href = '/login';
+        window.location.href = '/';
     };
 
     const handleLogin = (userData) => {

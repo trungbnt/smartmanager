@@ -24,12 +24,14 @@ function Contact() {
         setNotifications(prev => prev.filter(note => note.id !== id));
     };
 
+    
+    const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
             setLoading(true);
             const token = localStorage.getItem('token');
-            await axios.post('http://localhost:5000/api/auth/contact', formData, {
+            await axios.post(`${API_URL}/api/auth/contact`, formData, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setFormData({ name: '', email: '', message: '' });

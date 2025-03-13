@@ -43,10 +43,12 @@ function Quote() {
         }, 5000);
     }, [removeNotification]);
 
+    
+    const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
     const fetchQuotes = useCallback(async () => {
         try {
             const token = localStorage.getItem('token');
-            const response = await axios.get('http://localhost:5000/api/auth/quotes', {
+            const response = await axios.get(`${API_URL}/api/auth/quotes`, {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }
@@ -59,31 +61,31 @@ function Quote() {
             }
             addNotification('Không thể tải danh sách báo giá', 'error');
         }
-    }, [addNotification]);
+    }, [addNotification, API_URL]);
 
     const fetchJobRequests = useCallback(async () => {
         try {
             const token = localStorage.getItem('token');
-            const response = await axios.get('http://localhost:5000/api/auth/job-requests', {
+            const response = await axios.get(`${API_URL}/api/auth/job-requests`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setJobRequests(response.data);
         } catch (err) {
             addNotification('Không thể tải danh sách yêu cầu công việc', 'error');
         }
-    }, [addNotification]);
+    }, [addNotification, API_URL]);
 
     const fetchCustomers = useCallback(async () => {
         try {
             const token = localStorage.getItem('token');
-            const response = await axios.get('http://localhost:5000/api/auth/customers', {
+            const response = await axios.get(`${API_URL}/api/auth/customers`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setCustomers(response.data);
         } catch (err) {
             addNotification('Không thể tải danh sách khách hàng', 'error');
         }
-    }, [addNotification]);
+    }, [addNotification, API_URL]);
 
     useEffect(() => {
         const token = localStorage.getItem('token');
@@ -195,7 +197,7 @@ function Quote() {
 
             const response = await axios({
                 method: 'post',
-                url: 'http://localhost:5000/api/auth/quotes',
+                url: `${API_URL}/api/auth/quotes`,
                 data: formDataToSend,
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -265,7 +267,7 @@ function Quote() {
             
             const token = localStorage.getItem('token');
             const response = await axios.put(
-                `http://localhost:5000/api/auth/quotes/${id}`,
+                `${API_URL}/api/auth/quotes/${id}`,
                 formData,
                 {
                     headers: {
@@ -302,7 +304,7 @@ function Quote() {
         try {
             setLoading(true);
             const token = localStorage.getItem('token');
-            await axios.delete(`http://localhost:5000/api/auth/quotes/${deleteId}`, {
+            await axios.delete(`${API_URL}/api/auth/quotes/${deleteId}`, {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }
@@ -425,7 +427,7 @@ function Quote() {
                                                     />
                                                     {quote.file && (
                                                         <a
-                                                            href={`http://localhost:5000/uploads/${quote.file}`}
+                                                            href={`${API_URL}/uploads/${quote.file}`}
                                                             target="_blank"
                                                             rel="noopener noreferrer"
                                                             className="btn btn-secondary btn-sm"

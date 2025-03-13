@@ -44,11 +44,13 @@ function EmployeeManagement() {
         }, 3000);
     }, []);
 
+    
+    const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
     const fetchEmployees = useCallback(async () => {
         try {
             setLoading(true);
             const token = localStorage.getItem('token');
-            const response = await axios.get('http://localhost:5000/api/auth/employees', {
+            const response = await axios.get(`${API_URL}/api/auth/employees`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setEmployees(response.data);
@@ -57,7 +59,7 @@ function EmployeeManagement() {
         } finally {
             setLoading(false);
         }
-    }, [addNotification]);
+    }, [addNotification, API_URL]);
 
     useEffect(() => {
         fetchEmployees();
@@ -103,7 +105,7 @@ function EmployeeManagement() {
                 employeeId
             };
 
-            await axios.post('http://localhost:5000/api/auth/employees', newFormData, {
+            await axios.post(`${API_URL}/api/auth/employees`, newFormData, {
                 headers: { Authorization: `Bearer ${token}` }
             });
 
@@ -144,7 +146,7 @@ function EmployeeManagement() {
         try {
             setLoading(true);
             const token = localStorage.getItem('token');
-            await axios.put(`http://localhost:5000/api/auth/employees/${id}`, formData, {
+            await axios.put(`${API_URL}/api/auth/employees/${id}`, formData, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setEditingId(null);
@@ -162,7 +164,7 @@ function EmployeeManagement() {
             try {
                 setLoading(true);
                 const token = localStorage.getItem('token');
-                await axios.delete(`http://localhost:5000/api/auth/employees/${id}`, {
+                await axios.delete(`${API_URL}/api/auth/employees/${id}`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 addNotification('Xóa nhân viên thành công');

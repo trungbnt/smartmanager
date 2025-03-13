@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { FaEdit, FaTrash, FaSave, FaTimes } from 'react-icons/fa';
 import Notification from '../components/Notification';
@@ -57,16 +57,12 @@ function JobRequest() {
     const [showAddModal, setShowAddModal] = useState(false);
     const [customers, setCustomers] = useState([]);
     const [selectedCustomer, setSelectedCustomer] = useState('');
+    const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
-    useEffect(() => {
-        fetchJobRequests();
-        fetchCustomers();
-    }, []);
-
-    const fetchJobRequests = async () => {
+    const fetchJobRequests = useCallback(async () => {
         try {
             const token = localStorage.getItem('token');
-            const response = await axios.get('http://localhost:5000/api/auth/job-requests', {
+            const response = await axios.get(`${API_URL}/api/auth/job-requests`, {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }
@@ -75,12 +71,12 @@ function JobRequest() {
         } catch (err) {
             setError('Không thể tải danh sách yêu cầu');
         }
-    };
-
-    const fetchCustomers = async () => {
+    }, [API_URL]);
+    
+    const fetchCustomers = useCallback(async () => {
         try {
             const token = localStorage.getItem('token');
-            const response = await axios.get('http://localhost:5000/api/auth/customers', {
+            const response = await axios.get(`${API_URL}/api/auth/customers`, {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }
@@ -89,7 +85,12 @@ function JobRequest() {
         } catch (err) {
             console.error('Error fetching customers:', err);
         }
-    };
+    }, [API_URL]);
+
+    useEffect(() => {
+        fetchJobRequests();
+        fetchCustomers();
+    }, [fetchJobRequests, fetchCustomers]);
 
     const addNotification = (message, type = 'success') => {
         const id = Date.now();
@@ -144,7 +145,7 @@ function JobRequest() {
             console.log('Sending request:', requestData);
             
             const response = await axios.post(
-                'http://localhost:5000/api/auth/job-requests', 
+                `${API_URL}/api/auth/job-requests`, 
                 requestData,
                 {
                     headers: {
@@ -232,7 +233,7 @@ function JobRequest() {
             
             // Gửi yêu cầu cập nhật
             const response = await axios.put(
-                `http://localhost:5000/api/auth/job-requests/${id}`,
+                `${API_URL}/api/auth/job-requests/${id}`,
                 updateData,
                 {
                     headers: {
@@ -268,7 +269,7 @@ function JobRequest() {
         try {
             setLoading(true);
             const token = localStorage.getItem('token');
-            await axios.delete(`http://localhost:5000/api/auth/job-requests/${deleteId}`, {
+            await axios.delete(`${API_URL}/api/auth/job-requests/${deleteId}`, {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }

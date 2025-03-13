@@ -35,11 +35,13 @@ function EquipmentManagement() {
         }, 3000);
     }, []);
 
+    
+    const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
     const fetchEquipment = useCallback(async () => {
         try {
             setLoading(true);
             const token = localStorage.getItem('token');
-            const response = await axios.get('http://localhost:5000/api/auth/equipment', {
+            const response = await axios.get(`${API_URL}/api/auth/equipment`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setEquipment(response.data);
@@ -48,7 +50,7 @@ function EquipmentManagement() {
         } finally {
             setLoading(false);
         }
-    }, [addNotification]);
+    }, [addNotification, API_URL]);
 
     useEffect(() => {
         fetchEquipment();
@@ -78,7 +80,7 @@ function EquipmentManagement() {
                 equipmentId
             };
 
-            await axios.post('http://localhost:5000/api/auth/equipment', newFormData, {
+            await axios.post(`${API_URL}/api/auth/equipment`, newFormData, {
                 headers: { Authorization: `Bearer ${token}` }
             });
 
@@ -107,7 +109,7 @@ function EquipmentManagement() {
             setLoading(true);
             const token = localStorage.getItem('token');
             await axios.post(
-                `http://localhost:5000/api/auth/equipment/${equipmentId}/maintenance`,
+                `${API_URL}/api/auth/equipment/${equipmentId}/maintenance`,
                 maintenanceData,
                 { headers: { Authorization: `Bearer ${token}` } }
             );
@@ -146,7 +148,7 @@ function EquipmentManagement() {
         try {
             setLoading(true);
             const token = localStorage.getItem('token');
-            await axios.put(`http://localhost:5000/api/auth/equipment/${id}`, formData, {
+            await axios.put(`${API_URL}/api/auth/equipment/${id}`, formData, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setEditingId(null);
@@ -164,7 +166,7 @@ function EquipmentManagement() {
             try {
                 setLoading(true);
                 const token = localStorage.getItem('token');
-                await axios.delete(`http://localhost:5000/api/auth/equipment/${id}`, {
+                await axios.delete(`${API_URL}/api/auth/equipment/${id}`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 addNotification('Xóa thiết bị thành công');

@@ -42,11 +42,13 @@ function Report() {
         }, 5000);
     }, [removeNotification]);
 
+    
+    const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
     const fetchReports = useCallback(async () => {
         try {
             setLoading(true);
             const token = localStorage.getItem('token');
-            const response = await axios.get('http://localhost:5000/api/auth/reports', {
+            const response = await axios.get(`${API_URL}/api/auth/reports`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setReports(response.data);
@@ -55,7 +57,7 @@ function Report() {
         } finally {
             setLoading(false);
         }
-    }, [addNotification]);
+    }, [addNotification, API_URL]);
 
     useEffect(() => {
         fetchReports();
@@ -72,7 +74,7 @@ function Report() {
             }
 
             const token = localStorage.getItem('token');
-            await axios.post('http://localhost:5000/api/auth/reports', formData, {
+            await axios.post(`${API_URL}/api/auth/reports`, formData, {
                 headers: { Authorization: `Bearer ${token}` }
             });
 
@@ -127,7 +129,7 @@ function Report() {
             setLoading(true);
             const token = localStorage.getItem('token');
             await axios.put(
-                `http://localhost:5000/api/auth/reports/${id}`,
+                `${API_URL}/api/auth/reports/${id}`,
                 editData,
                 {
                     headers: {
@@ -160,7 +162,7 @@ function Report() {
         try {
             setLoading(true);
             const token = localStorage.getItem('token');
-            await axios.delete(`http://localhost:5000/api/auth/reports/${deleteId}`, {
+            await axios.delete(`${API_URL}/api/auth/reports/${deleteId}`, {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }

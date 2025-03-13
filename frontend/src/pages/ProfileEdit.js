@@ -16,11 +16,12 @@ function ProfileEdit() {
     const [error, setError] = useState('');
     const navigate = useNavigate();
 
+    const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
     useEffect(() => {
         const fetchUserData = async () => {
             try {
                 const token = localStorage.getItem('token');
-                const response = await axios.get('http://localhost:5000/api/users/profile', {
+                const response = await axios.get(`${API_URL}/api/users/profile`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 setFormData(prev => ({
@@ -35,7 +36,7 @@ function ProfileEdit() {
         };
 
         fetchUserData();
-    }, []);
+    }, [API_URL]);
 
     const handleChange = (e) => {
         setFormData({
@@ -54,7 +55,7 @@ function ProfileEdit() {
             // Không gửi username và email vì không cho phép chỉnh sửa
             const { phone, currentPassword, newPassword, confirmPassword } = formData;
             await axios.put(
-                'http://localhost:5000/api/users/profile',
+                `${API_URL}/api/users/profile`,
                 { phone, currentPassword, newPassword, confirmPassword },
                 { headers: { Authorization: `Bearer ${token}` } }
             );

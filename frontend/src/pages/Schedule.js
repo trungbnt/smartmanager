@@ -47,11 +47,13 @@ function Schedule() {
         }, 5000);
     }, [removeNotification]);
 
+    
+    const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
     const fetchSchedules = useCallback(async () => {
         try {
             setLoading(true);
             const token = localStorage.getItem('token');
-            const response = await axios.get('http://localhost:5000/api/auth/schedules', {
+            const response = await axios.get(`${API_URL}/api/auth/schedules`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setSchedules(response.data);
@@ -60,24 +62,24 @@ function Schedule() {
         } finally {
             setLoading(false);
         }
-    }, [addNotification]);
+    }, [addNotification, API_URL]);
 
     const fetchJobRequests = useCallback(async () => {
         try {
             const token = localStorage.getItem('token');
-            const response = await axios.get('http://localhost:5000/api/auth/job-requests', {
+            const response = await axios.get(`${API_URL}/api/auth/job-requests`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setJobRequests(response.data);
         } catch (err) {
             addNotification('Không thể tải danh sách yêu cầu công việc', 'error');
         }
-    }, [addNotification]);
+    }, [addNotification, API_URL]);
 
     const fetchEquipment = useCallback(async () => {
         try {
             const token = localStorage.getItem('token');
-            const response = await axios.get('http://localhost:5000/api/auth/equipment', {
+            const response = await axios.get(`${API_URL}/api/auth/equipment`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setEquipment(response.data);
@@ -85,7 +87,7 @@ function Schedule() {
             console.error('Error fetching equipment:', err);
             addNotification('Không thể tải danh sách thiết bị', 'error');
         }
-    }, [addNotification]);
+    }, [addNotification, API_URL]);
 
     useEffect(() => {
         fetchSchedules();
@@ -104,7 +106,7 @@ function Schedule() {
             }
 
             const token = localStorage.getItem('token');
-            await axios.post('http://localhost:5000/api/auth/schedules', formData, {
+            await axios.post(`${API_URL}/api/auth/schedules`, formData, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             
@@ -165,7 +167,7 @@ function Schedule() {
 
             const token = localStorage.getItem('token');
             const response = await axios.put(
-                `http://localhost:5000/api/auth/schedules/${id}`,
+                `${API_URL}/api/auth/schedules/${id}`,
                 editData,
                 {
                     headers: {
@@ -200,7 +202,7 @@ function Schedule() {
         try {
             setLoading(true);
             const token = localStorage.getItem('token');
-            await axios.delete(`http://localhost:5000/api/auth/schedules/${deleteId}`, {
+            await axios.delete(`${API_URL}/api/auth/schedules/${deleteId}`, {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }

@@ -64,8 +64,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 // Cấu hình CORS linh hoạt
 const allowedOrigins = [
-    'http://localhost:3000', // Cho phép khi chạy trên localhost
-    process.env.FRONTEND_URL // URL frontend khi deploy trên Vercel, cấu hình trong .env hoặc Vercel dashboard
+    'http://localhost:3000',
+    'https://smartmanager-sigma.vercel.app'
 ].filter(Boolean); // Lọc bỏ các giá trị undefined
 
 app.use(cors({

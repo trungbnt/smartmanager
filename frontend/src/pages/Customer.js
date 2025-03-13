@@ -37,11 +37,13 @@ function Customer() {
         }, 5000);
     }, [removeNotification]);
 
+    
+    const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
     const fetchCustomers = useCallback(async () => {
         try {
             setLoading(true);
             const token = localStorage.getItem('token');
-            const response = await axios.get('http://localhost:5000/api/auth/customers', {
+            const response = await axios.get(`${API_URL}/api/auth/customers`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setCustomers(response.data);
@@ -50,7 +52,7 @@ function Customer() {
         } finally {
             setLoading(false);
         }
-    }, [addNotification]);
+    }, [addNotification, API_URL]);
 
     useEffect(() => {
         fetchCustomers();
@@ -68,7 +70,7 @@ function Customer() {
         try {
             setLoading(true);
             const token = localStorage.getItem('token');
-            await axios.post('http://localhost:5000/api/auth/customers', 
+            await axios.post(`${API_URL}/api/auth/customers`, 
                 formData,
                 {
                     headers: { Authorization: `Bearer ${token}` }
@@ -110,7 +112,7 @@ function Customer() {
         try {
             setLoading(true);
             const token = localStorage.getItem('token');
-            await axios.put(`http://localhost:5000/api/auth/customers/${id}`, 
+            await axios.put(`${API_URL}/api/auth/customers/${id}`, 
                 formData,
                 {
                     headers: { Authorization: `Bearer ${token}` }
@@ -153,7 +155,7 @@ function Customer() {
         try {
             setLoading(true);
             const token = localStorage.getItem('token');
-            await axios.delete(`http://localhost:5000/api/auth/customers/${deleteId}`, {
+            await axios.delete(`${API_URL}/api/auth/customers/${deleteId}`, {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }
