@@ -27,7 +27,7 @@ function Home() {
                             <Link to="/job-requests" className="btn dashboard-btn">
                                 Quản lý yêu cầu công việc
                             </Link>
-                            <Link to="/schedule" className="btn dashboard-btn">
+                            <Link to="/schedules" className="btn dashboard-btn">
                                 Lịch biểu
                             </Link>
                             <Link to="/customers" className="btn dashboard-btn">
