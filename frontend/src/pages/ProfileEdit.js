@@ -5,6 +5,7 @@ import '../styles/pages.css';
 
 function ProfileEdit() {
     const [formData, setFormData] = useState({
+        username: '',
         email: '',
         phone: '',
         currentPassword: '',
@@ -20,12 +21,13 @@ function ProfileEdit() {
             try {
                 const token = localStorage.getItem('token');
                 const response = await axios.get('http://localhost:5000/api/users/profile', {
-                    headers: { Authorization: token }
+                    headers: { Authorization: `Bearer ${token}` }
                 });
                 setFormData(prev => ({
                     ...prev,
-                    email: response.data.email || '',
-                    phone: response.data.phone || ''
+                    username: response.data.username || "Không có dữ liệu",
+                    email: response.data.email || "Không có dữ liệu",
+                    phone: response.data.phone || 'Chưa cập nhật'
                 }));
             } catch (error) {
                 console.error('Error fetching user data:', error);
@@ -49,10 +51,12 @@ function ProfileEdit() {
 
         try {
             const token = localStorage.getItem('token');
+            // Không gửi username và email vì không cho phép chỉnh sửa
+            const { phone, currentPassword, newPassword, confirmPassword } = formData;
             await axios.put(
                 'http://localhost:5000/api/users/profile',
-                formData,
-                { headers: { Authorization: token } }
+                { phone, currentPassword, newPassword, confirmPassword },
+                { headers: { Authorization: `Bearer ${token}` } }
             );
             navigate('/profile');
         } catch (error) {
@@ -72,12 +76,23 @@ function ProfileEdit() {
                 {error && <div className="error-message">{error}</div>}
                 
                 <div className="form-group">
+                    <label>Tên đăng nhập:</label>
+                    <input
+                        type="text"
+                        name="username"
+                        value={formData.username}
+                        disabled
+                        className="form-control"
+                    />
+                </div>
+
+                <div className="form-group">
                     <label>Email:</label>
                     <input
                         type="email"
                         name="email"
                         value={formData.email}
-                        onChange={handleChange}
+                        disabled
                         className="form-control"
                     />
                 </div>

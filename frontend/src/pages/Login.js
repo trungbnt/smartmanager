@@ -82,7 +82,10 @@ const Login = ({ onLogin }) => {
                 }
 
                 // Store auth token
-                localStorage.setItem('token', `Bearer ${response.data.token}`);
+                const token = response.data.token.startsWith('Bearer ')
+                    ? response.data.token.replace('Bearer ', '')
+                    : response.data.token;
+                localStorage.setItem('token', token);
                 localStorage.setItem('userRole', response.data.role);
                 localStorage.setItem('username', response.data.username || username);
                 

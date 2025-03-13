@@ -8,6 +8,7 @@ const invoiceRoutes = require('./invoice'); // Thêm route invoice
 const reportRoutes = require('./report'); // Thêm route report
 const authRoutes = require('./auth'); // Thêm route auth
 const jobRequestRoutes = require('./jobRequest'); // Thêm route jobRequest
+const userRoutes = require('./user'); // Thêm route userRoutes
 const auth = require('../middleware/auth');
 const authMiddleware = require('../middleware/authMiddleware');
 
@@ -36,5 +37,8 @@ router.use('/reports', reportRoutes);
 
 // Thêm route cho đăng ký và đăng nhập
 router.use('/auth', authRoutes);
+
+// Thêm route cho User
+router.use('/users', userRoutes);
 
 module.exports = router; 

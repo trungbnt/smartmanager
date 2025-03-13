@@ -12,27 +12,44 @@ function Profile() {
         createdAt: ''
     });
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
+    const navigate = useNavigate();
 
     useEffect(() => {
         const fetchUserData = async () => {
             try {
                 const token = localStorage.getItem('token');
                 const response = await axios.get('http://localhost:5000/api/users/profile', {
-                    headers: { Authorization: token }
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    },
+                    timeout: 5000
                 });
                 setUserData(response.data);
             } catch (error) {
-                console.error('Error fetching user data:', error);
+                console.error('Error fetching user data:', {
+                    message: error.message,
+                    code: error.code,
+                    response: error.response?.data,
+                    status: error.response?.status,
+                    request: error.request ? 'Request sent but no response' : 'Request not sent'
+                });
+                if (error.response?.status === 401) {
+                    navigate('/login');
+                }
+                setError('Không thể tải dữ liệu');
             } finally {
                 setLoading(false);
             }
         };
-
         fetchUserData();
-    }, []);
+    }, [navigate]);
 
     if (loading) {
         return <div>Loading...</div>;
+    }
+    if (error) {
+        return <div className="error-message">{error}</div>;
     }
 
     return (

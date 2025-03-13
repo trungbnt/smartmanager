@@ -3,13 +3,19 @@ const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const routes = require('./routes');
 const authRoutes = require('./routes/auth');
+const userRoutes = require('./routes/user');
 const cors = require('cors');
 const multer = require('multer');
 const cloudinary = require('cloudinary').v2;
 require('dotenv').config();
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+
+// Kiểm tra biến môi trường quan trọng
+if (!process.env.JWT_SECRET) {
+    console.error('Error: JWT_SECRET is not configured');
+    process.exit(1);
+}
 
 // Cấu hình Cloudinary
 cloudinary.config({
@@ -76,22 +82,16 @@ app.use(cors({
     credentials: true
 }));
 
+// Middleware debug request
+app.use((req, res, next) => {
+    // console.log(`${req.method} ${req.url} - Received at: ${new Date().toISOString()}`);
+    next();
+});
+
+// Đảm bảo route được gắn đúng
 app.use('/api', routes);
 app.use('/api/auth', authRoutes);
-
-// Xóa các log về request
-app.use((req, res, next) => {
-    next();
-});
-
-// Xóa các log về response
-app.use((req, res, next) => {
-    const originalSend = res.send;
-    res.send = function(body) {
-        return originalSend.call(this, body);
-    };
-    next();
-});
+app.use('/api/users', userRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

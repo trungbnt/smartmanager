@@ -17,6 +17,14 @@ const userSchema = new mongoose.Schema({
         enum: ['admin', 'sales', 'engineering', 'account', 'customer'],
         required: true
     },
+    email: {
+        type: String,
+        unique: true,
+        sparse: true // Cho phép nhiều người dùng không có email
+    },
+    phone: {
+        type: String
+    },
     createdAt: {
         type: Date,
         default: Date.now

@@ -48,7 +48,7 @@ function Quote() {
             const token = localStorage.getItem('token');
             const response = await axios.get('http://localhost:5000/api/auth/quotes', {
                 headers: {
-                    Authorization: token
+                    Authorization: `Bearer ${token}`
                 }
             });
             setQuotes(response.data);

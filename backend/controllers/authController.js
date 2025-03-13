@@ -1,26 +1,35 @@
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
-const bcrypt = require('bcryptjs');  // Thay đổi import
+const bcrypt = require('bcryptjs');
 
 // Đăng ký người dùng mới
 exports.register = async (req, res) => {
     try {
-        const { username, password, role } = req.body;
-        
-        // Kiểm tra user tồn tại
+        const { username, email, password, role } = req.body;
+
+        // Kiểm tra username tồn tại
         const existingUser = await User.findOne({ username });
         if (existingUser) {
             return res.status(400).json({ message: 'Username already exists' });
+        }
+
+        // Kiểm tra email tồn tại (nếu được cung cấp)
+        if (email) {
+            const existingEmail = await User.findOne({ email });
+            if (existingEmail) {
+                return res.status(400).json({ message: 'Email already exists' });
+            }
         }
 
         // Mã hóa mật khẩu với bcryptjs
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
-        const newUser = new User({ 
-            username, 
-            password: hashedPassword, 
-            role 
+        const newUser = new User({
+            username,
+            email, // Thêm email nếu được cung cấp
+            password: hashedPassword,
+            role
         });
 
         await newUser.save();
@@ -36,7 +45,7 @@ exports.login = async (req, res) => {
     try {
         const { username, password } = req.body;
         const user = await User.findOne({ username });
-        
+
         if (!user) {
             return res.status(401).json({ message: 'Invalid credentials' });
         }

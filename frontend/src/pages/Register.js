@@ -7,6 +7,7 @@ import '../styles/pages.css';
 
 function Register() {
     const [username, setUsername] = useState('');
+    const [email, setEmail] = useState(''); // Thêm state cho email
     const [password, setPassword] = useState('');
     const [role, setRole] = useState('customer');
     const [loading, setLoading] = useState(false);
@@ -31,6 +32,7 @@ function Register() {
             setLoading(true);
             await axios.post('http://localhost:5000/api/auth/register', { 
                 username, 
+                email, // Thêm email vào request
                 password, 
                 role 
             });
@@ -59,6 +61,17 @@ function Register() {
                             value={username}
                             onChange={(e) => setUsername(e.target.value)}
                             required
+                            className="form-control"
+                        />
+                    </div>
+
+                    <div className="form-group">
+                        <label htmlFor="email">Email:</label>
+                        <input
+                            type="email"
+                            id="email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
                             className="form-control"
                         />
                     </div>
