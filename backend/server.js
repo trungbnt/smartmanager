@@ -66,7 +66,7 @@ app.use(express.urlencoded({ extended: true }));
 const allowedOrigins = [
     'http://localhost:3000',
     'https://smartmanager-sigma.vercel.app',
-    'https://smartmanagerbackend.vercel.app/'
+    'https://smartmanagerbackend.vercel.app'
 ].filter(Boolean); // Lọc bỏ các giá trị undefined
 
 app.use(cors({
