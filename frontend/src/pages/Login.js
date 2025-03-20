@@ -67,12 +67,13 @@ const Login = ({ onLogin }) => {
             const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
             const response = await axios.post(`${API_URL}/api/auth/login`, 
                 {
-                username,
-                password
+                    username,
+                    password
                 },
                 {
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
                     },
                     withCredentials: true
                 }
