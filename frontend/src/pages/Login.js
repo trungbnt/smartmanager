@@ -61,6 +61,7 @@ const Login = ({ onLogin }) => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        console.log('API_URL:', process.env.REACT_APP_API_URL);
         try {
             setLoading(true);
             const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
