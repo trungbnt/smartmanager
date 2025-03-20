@@ -65,10 +65,18 @@ const Login = ({ onLogin }) => {
         try {
             setLoading(true);
             const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
-            const response = await axios.post(`${API_URL}/api/auth/login`, {
+            const response = await axios.post(`${API_URL}/api/auth/login`, 
+                {
                 username,
                 password
-            });
+                },
+                {
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    withCredentials: true
+                }
+            );
 
             if (response.data.token) {
                 // Handle Remember Me

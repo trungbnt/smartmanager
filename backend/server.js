@@ -80,8 +80,13 @@ app.use(cors({
     },
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
     allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: true
+    credentials: true,
+    exposedHeaders: ['Content-Length', 'X-Foo', 'X-Bar'],
+    maxAge: 86400 // 1 day
 }));
+
+// Add OPTIONS handling for preflight requests
+app.options('*', cors());
 
 // Middleware debug request
 app.use((req, res, next) => {
