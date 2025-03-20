@@ -11,6 +11,7 @@ const User = require('../models/User');
 const auth = require('../middleware/auth');
 const employeeController = require('../controllers/employeeController');
 const equipmentController = require('../controllers/equipmentController');
+const userController = require('../controllers/userController');
 const cloudinary = require('cloudinary').v2;
 
 // Đăng ký người dùng mới
@@ -141,5 +142,9 @@ router.get('/equipment', auth(['admin', 'engineering']), equipmentController.get
 router.put('/equipment/:id', auth(['admin', 'engineering']), equipmentController.updateEquipment);
 router.delete('/equipment/:id', auth(['admin']), equipmentController.deleteEquipment);
 router.post('/equipment/:id/maintenance', auth(['admin', 'engineering']), equipmentController.addMaintenance);
+
+// Thêm các routes cho profile
+router.get('/profile', auth, userController.getProfile);
+router.put('/profile', auth, userController.updateProfile);
 
 module.exports = router;
